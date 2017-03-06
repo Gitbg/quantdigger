@@ -50,12 +50,18 @@ class DemoStrategy(Strategy):
 
 
 if __name__ == '__main__':
-    # 
+    #
+    import timeit
+    start = timeit.default_timer()
+    ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
     set_symbols(['*.SH'])
     algo = DemoStrategy('A1')
     profile = add_strategy([algo], { 'capital': 500000000.0 })
 
     run()
+
+    stop = timeit.default_timer()
+    print('Used time is %d seconds' % (stop - start))
 
     from quantdigger.digger import finance, plotting
     curve = finance.create_equity_curve(profile.all_holdings())
