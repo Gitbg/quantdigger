@@ -46,6 +46,22 @@ class MA(TechnicalBase):
         self.widget = widget
         self.plot_line(self.values, self.style, lw=self.lw)
 
+@register_tech('CCI')
+class CCI(TechnicalBase):
+    @tech_init
+    def __init__(self, high, low, close, n, name='CCI', style='y', lw=1):
+        super(CCI, self).__init__(name)
+        self._args = [ndarray(high), ndarray(low), ndarray(close), n]
+
+    def _rolling_algo(self, high, low, close, n, i):
+        return talib.CCI(high, low, close, n)[i]
+
+    def _vector_algo(self, high, low, close, n):
+        self.values = talib.CCI(high, low, close, n)
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values, self.style, lw=self.lw)
 
 @register_tech('BOLL')
 class BOLL(TechnicalBase):
@@ -83,7 +99,6 @@ class BOLL(TechnicalBase):
         self.plot_line(self.values['upper'], self.styles[0], lw=self.lw)
         self.plot_line(self.values['middler'], self.styles[1], lw=self.lw)
         self.plot_line(self.values['lower'], self.styles[2], lw=self.lw)
-
 
 #class RSI(TechnicalBase):
     #@create_attributes
@@ -204,4 +219,4 @@ class LineWithX(Plotter):
         self.plot_line(self.xdata, self.values, self.style, lw=self.lw, ms=self.ms)
 
 
-__all__ = ['MA', 'BOLL', 'Volume', 'Line', 'LineWithX']
+__all__ = ['MA', 'BOLL', 'CCI', 'Volume', 'Line', 'LineWithX']
