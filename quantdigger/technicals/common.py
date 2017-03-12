@@ -63,6 +63,42 @@ class CCI(TechnicalBase):
         self.widget = widget
         self.plot_line(self.values, self.style, lw=self.lw)
 
+@register_tech('RSI')
+class RSI(TechnicalBase):
+    @tech_init
+    def __init__(self, close, n, name = 'RSI', style = 'y', lw = 1):
+        super(RSI, self).__init__(name)
+        self._args = [ndarray(close), n]
+
+    def _rolling_algo(self, close, n, i):
+        return talib.RSI(close, n)[i]
+
+    def _vector_algo(self, close, n):
+        self.values = talib.RSI(close, n)
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values, self.style, lw = self.lw)
+
+@register_tech('BIAS')
+class BIAS(TechnicalBase):
+    @tech_init
+    def __init__(self, close, n, name='BIAS', style='y', lw=1):
+        super(BIAS, self).__init__(name)
+        self._args = [ndarray(close), n]
+
+    def _rolling_algo(self, close, n, i):
+        ma = talib.MA(close, n)
+        return (close[i] - ma[i]) / ma[i] * 100
+
+    def _vector_algo(self, close, n):
+        ma = talib.MA(close, n)
+        self.values = (close - ma) / ma * 100
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values, self.style, lw = self.lw)
+
 @register_tech('BOLL')
 class BOLL(TechnicalBase):
     """ 布林带指标。 """
@@ -219,4 +255,4 @@ class LineWithX(Plotter):
         self.plot_line(self.xdata, self.values, self.style, lw=self.lw, ms=self.ms)
 
 
-__all__ = ['MA', 'BOLL', 'CCI', 'Volume', 'Line', 'LineWithX']
+__all__ = ['MA', 'BOLL', 'CCI', 'BIAS','RSI', 'Volume', 'Line', 'LineWithX']
