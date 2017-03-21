@@ -5,7 +5,7 @@ matplotlib.use('TkAgg')
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from quantdigger.technicals import CCI
+from quantdigger.technicals import aCCI
 
 # 创建画布
 fig, ax = plt.subplots()
@@ -13,7 +13,7 @@ fig, ax = plt.subplots()
 price_data = pd.read_csv("D:\dan\stock\py_stock\quantdigger\data\data\\1DAY\SH\\600019.csv",
                          index_col=0, parse_dates=True)
 
-cci = CCI(price_data.high, price_data.low, price_data.close, 14, 'CCI', 'y', 2)
+acci = aCCI(price_data.high, price_data.low, price_data.close, 14, 'CCI', 'y', 2)
 # 绘制指标
-cci.plot(ax)
+acci.plot(ax)
 plt.show()

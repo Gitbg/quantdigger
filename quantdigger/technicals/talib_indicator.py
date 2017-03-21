@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##
-# @file common.py
+# @file tquant_indicator.py
 # @brief
 # @author wondereamer
 # @version 0.1
@@ -13,15 +13,14 @@ from quantdigger.technicals.base import \
 from quantdigger.technicals.techutil import register_tech
 from quantdigger.widgets.plotter import Plotter, plot_init
 
-
-@register_tech('MA')
-class MA(TechnicalBase):
+@register_tech('aMA')
+class aMA(TechnicalBase):
     """ 移动平均线指标。 """
     @tech_init
-    def __init__(self, data, n, name='MA',
+    def __init__(self, data, n, name='aMA',
                  style='y', lw=1):
         """ data (NumberSeries/np.ndarray/list) """
-        super(MA, self).__init__(name)
+        super(aMA, self).__init__(name)
         # 必须的函数参数
         self._args = [ndarray(data), n]
 
@@ -46,11 +45,11 @@ class MA(TechnicalBase):
         self.widget = widget
         self.plot_line(self.values, self.style, lw=self.lw)
 
-@register_tech('CCI')
-class CCI(TechnicalBase):
+@register_tech('aCCI')
+class aCCI(TechnicalBase):
     @tech_init
-    def __init__(self, high, low, close, n, name='CCI', style='y', lw=1):
-        super(CCI, self).__init__(name)
+    def __init__(self, high, low, close, n, name='aCCI', style='y', lw=1):
+        super(aCCI, self).__init__(name)
         self._args = [ndarray(high), ndarray(low), ndarray(close), n]
 
     def _rolling_algo(self, high, low, close, n, i):
@@ -63,28 +62,28 @@ class CCI(TechnicalBase):
         self.widget = widget
         self.plot_line(self.values, self.style, lw=self.lw)
 
-@register_tech('RSI')
-class RSI(TechnicalBase):
+@register_tech('aRSI')
+class aRSI(TechnicalBase):
     @tech_init
-    def __init__(self, close, n, name = 'RSI', style = 'y', lw = 1):
-        super(RSI, self).__init__(name)
+    def __init__(self, close, n, name = 'aRSI', style = 'y', lw = 1):
+        super(aRSI, self).__init__(name)
         self._args = [ndarray(close), n]
 
     def _rolling_algo(self, close, n, i):
         return talib.RSI(close, n)[i]
 
     def _vector_algo(self, close, n):
-        self.values = talib.RSI(close, n)
+        self.values = talib.RSI(close, timeperiod = n)
 
     def plot(self, widget):
         self.widget = widget
         self.plot_line(self.values, self.style, lw = self.lw)
 
-@register_tech('BIAS')
-class BIAS(TechnicalBase):
+@register_tech('aBIAS')
+class aBIAS(TechnicalBase):
     @tech_init
-    def __init__(self, close, n, name='BIAS', style='y', lw=1):
-        super(BIAS, self).__init__(name)
+    def __init__(self, close, n, name='aBIAS', style='y', lw=1):
+        super(aBIAS, self).__init__(name)
         self._args = [ndarray(close), n]
 
     def _rolling_algo(self, close, n, i):
@@ -99,13 +98,13 @@ class BIAS(TechnicalBase):
         self.widget = widget
         self.plot_line(self.values, self.style, lw = self.lw)
 
-@register_tech('BOLL')
-class BOLL(TechnicalBase):
+@register_tech('aBOLL')
+class aBOLL(TechnicalBase):
     """ 布林带指标。 """
     @tech_init
-    def __init__(self, data, n, name='BOLL',
+    def __init__(self, data, n, name='aBOLL',
                  styles=('y', 'b', 'g'), lw=1):
-        super(BOLL, self).__init__(name)
+        super(aBOLL, self).__init__(name)
         ### @TODO 只有在逐步运算中需给self.values先赋值,
         ## 去掉逐步运算后删除
         #self.values = OrderedDict([
@@ -255,4 +254,4 @@ class LineWithX(Plotter):
         self.plot_line(self.xdata, self.values, self.style, lw=self.lw, ms=self.ms)
 
 
-__all__ = ['MA', 'BOLL', 'CCI', 'BIAS','RSI', 'Volume', 'Line', 'LineWithX']
+__all__ = ['aMA', 'aBOLL', 'aCCI', 'aBIAS','aRSI', 'Volume', 'Line', 'LineWithX']

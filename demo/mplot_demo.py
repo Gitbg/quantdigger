@@ -6,7 +6,7 @@ matplotlib.use('TkAgg')
 
 from quantdigger.widgets.mplotwidgets import widgets
 from quantdigger.widgets.mplotwidgets.mplots import Candles
-from quantdigger.technicals.common import MA, Volume
+from quantdigger.technicals.talib_indicator import aMA, Volume
 
 price_data = pd.read_csv('./data/IF000.csv', index_col=0, parse_dates=True)
 fig = plt.figure()
@@ -18,8 +18,8 @@ axes = frame.init_layout(50,         # 窗口显示k线数量。
 
 candle_widget = widgets.FrameWidget(axes[0], "candle_widget", 100, 50)
 candles = Candles(price_data, None, 'candles')
-ma30 = MA(price_data.close, 30, 'MA30', 'b', 2)
-ma20 = MA(price_data.close, 20, 'MA20', 'y', 2)
+ma30 = aMA(price_data.close, 30, 'MA30', 'b', 2)
+ma20 = aMA(price_data.close, 20, 'MA20', 'y', 2)
 candle_widget.add_plotter(candles, False)
 candle_widget.add_plotter(ma30, False)
 candle_widget.add_plotter(ma20, False)
