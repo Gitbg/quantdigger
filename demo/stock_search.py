@@ -7,6 +7,7 @@
 # @date 2015-12-09
 
 from quantdigger import *
+from quantdigger.interaction.save import save_candicates
 
 class DemoStrategy(Strategy):
     """ 策略A1 """
@@ -17,8 +18,8 @@ class DemoStrategy(Strategy):
     
     def on_init(self, ctx):
         """初始化数据""" 
-        ctx.ma10 = MA(ctx.close, 10, 'ma10', 'y', 2)
-        ctx.ma20 = MA(ctx.close, 20, 'ma20', 'b', 2)
+        ctx.ma10 = aMA(ctx.close, 10, 'ma10', 'y', 2)
+        ctx.ma20 = aMA(ctx.close, 20, 'ma20', 'b', 2)
 
     def on_symbol(self, ctx):
         if ctx.curbar > 20:
@@ -28,6 +29,13 @@ class DemoStrategy(Strategy):
                 self.to_sell.append(ctx.symbol)
 
     def on_bar(self, ctx):
+        if(len(self.candicates) != 0):
+            save_candicates('D:\dan\stock\py_stock\quantdigger\candicates',
+                            ctx.strategy,
+                            ctx.ctx_datetime,
+                            ctx.pcontract,
+                            self.candicates)
+
         for symbol in self.to_sell:
             if ctx.pos('long', symbol) > 0:
                 ctx.sell(ctx[symbol].close, 1, symbol) 
@@ -55,6 +63,7 @@ if __name__ == '__main__':
     start = timeit.default_timer()
     ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
     set_symbols(['*.SH'])
+    #set_symbols(['*.SZ'])
     algo = DemoStrategy('A1')
     profile = add_strategy([algo], { 'capital': 500000000.0 })
 
