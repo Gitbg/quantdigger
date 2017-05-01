@@ -12,12 +12,27 @@ class xd_stocks_spider(scrapy.Spider):
         yield scrapy.Request(url, self.parse)
 
     def parse(self, response):
-        stocks = []
-        item = response.xpath(u'//td[contains(text(), "分红转增除权除息日")]')
-        codes = item.xpath('../following-sibling::tr[1]/td[1]/table[1]/tr[1]/input/@value')
-        for code in codes.extract():
-            stocks.append(code[-6:])
-        print stocks
+        xd_stocks  = []
+        fp_stocks  = []
+        new_stocks = []
+
+        xd_item = response.xpath(u'//td[contains(text(), "分红转增除权除息日")]')
+        xd_codes = xd_item.xpath('../following-sibling::tr[1]/td[1]/table[1]/tr[1]/input/@value')
+        for code in xd_codes.extract():
+            xd_stocks.append(code[-6:])
+
+        new_item = response.xpath(u'//td[contains(text(), "首发新股上市日")]')
+        new_codes = new_item.xpath('../following-sibling::tr[1]/td[1]/table[1]/tr[1]/input/@value')
+        for code in new_codes.extract():
+            new_stocks.append(code[-6:])
+
+        fp_item = response.xpath(u'//td[contains(text(), "复牌日")]')
+        fp_codes = fp_item.xpath('../following-sibling::tr[1]/td[1]/table[1]/tr[1]/td/a/@onclick')
+        for code in fp_codes.extract():
+            fp_stocks.append(code[-18:-12])
+
         yield {
-            'xd_stocks': [stock for stock in stocks]
+            'xd_stocks': xd_stocks,
+            'fp_stocks': fp_stocks,
+            'new_stocks': new_stocks
         }
