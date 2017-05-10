@@ -38,7 +38,7 @@ class aMA(TechnicalBase):
         """
         ## @NOTE self.values为保留字段！
         # 绘图和指标基类都会用到self.values
-        self.values = talib.SMA(data, n)
+        self.values = talib.MA(data, n)
 
     def plot(self, widget):
         """ 绘图，参数可由UI调整。 """
