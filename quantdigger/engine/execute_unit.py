@@ -76,7 +76,7 @@ class ExecuteUnit(object):
                     k = strpcon.split('.')[1]
                     for key, value in exch_period2strpcon.iteritems():
                         if '-' in k:
-                            if k == key:
+                            if strpcon.split('.')[1:] == key.split('.')[0:]:
                                 rst += value
                         elif k == key.split('-')[0]:
                                 rst += value

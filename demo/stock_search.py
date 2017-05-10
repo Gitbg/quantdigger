@@ -61,9 +61,11 @@ if __name__ == '__main__':
     #
     import timeit
     start = timeit.default_timer()
-    ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
-    set_symbols(['*.SH'])
+    #ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
+    ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\hfq')
+    #set_symbols(['*.SH'])
     #set_symbols(['*.SZ'])
+    set_symbols(['*.SH-1.DAY'])
     algo = DemoStrategy('A1')
     profile = add_strategy([algo], { 'capital': 500000000.0 })
 
