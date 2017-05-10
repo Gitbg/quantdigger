@@ -288,12 +288,32 @@ def update_month_k_data(fq, exchange, symbols, lastest_update_day, current_day):
         with open(failed_file, 'w') as failed_file:
             json.dump(failed_symbols, failed_file)
 
+def genenrate_contracts(fqs, t_sh_symbols, t_sz_symbols, t_cyb_symbols):
+    for fq in fqs:
+        dir = os.path.join(root_path, 'tushare_csv', 'k_data', fq)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        fname = os.path.join(dir, "CONTRACTS.csv")
+        exchange_sh = ['SH' for item in t_sh_symbols]
+        exchange_sz = ['SZ' for item in t_sz_symbols]
+        exchange_cyb = ['CYB' for item in t_cyb_symbols]
+        exchanges = exchange_sh + exchange_sz + exchange_cyb
+        symbols = map(str, t_sh_symbols) + map(str, t_sz_symbols) + map(str, t_cyb_symbols)
+        long_margin_ratio = [1 for item in symbols]
+        volume_multiple = [1 for item in symbols]
+        pd.DataFrame({'code' : symbols,
+                      'exchange': exchanges,
+                      'long_margin_ratio': long_margin_ratio,
+                      'volume_multiple': volume_multiple}).to_csv(fname, index=False)
+
+
 def update_k_data(fqs):
     total_symbols = stocks_basics.sort_index().index
     t_sz_symbols = [symbol for symbol in total_symbols if symbol[0] == '0']
     t_cyb_symbols = [symbol for symbol in total_symbols if symbol[0] == '3']
     t_sh_symbols = [symbol for symbol in total_symbols if symbol[0] == '6']
 
+    genenrate_contracts(fqs, t_sh_symbols, t_sz_symbols, t_cyb_symbols)
     for fq in fqs:
         lastest_update_day = get_latest_update_datetime('1DAY', fq, 'SZ')
         current_day = get_current_datetime()
