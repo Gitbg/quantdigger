@@ -8,6 +8,7 @@
 
 from quantdigger import *
 from quantdigger.interaction.save import save_candicates
+from quantdigger.technicals import fMA
 
 class DemoStrategy(Strategy):
     """ 策略A1 """
@@ -18,8 +19,8 @@ class DemoStrategy(Strategy):
     
     def on_init(self, ctx):
         """初始化数据""" 
-        ctx.ma10 = aMA(ctx.close, 10, 'ma10', 'y', 2)
-        ctx.ma20 = aMA(ctx.close, 20, 'ma20', 'b', 2)
+        ctx.ma10 = fMA(ctx.close, 10, 'ma10', 'y', 2)
+        ctx.ma20 = fMA(ctx.close, 20, 'ma20', 'b', 2)
 
     def on_symbol(self, ctx):
         if ctx.curbar > 20:
