@@ -36,7 +36,7 @@ class CsvSource(DatasourceAbstract):
             pd.DataFrame
         """
         fname = os.path.join(self._root, "CONTRACTS.csv")
-        df = pd.read_csv(fname)
+        df = pd.read_csv(fname, converters={'code': str})
         df.index = df['code'] + '.' + df['exchange']
         df.index = map(lambda x: x.upper(), df.index)
         return df
