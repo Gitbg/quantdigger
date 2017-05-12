@@ -8,26 +8,13 @@
 
 from quantdigger import *
 from quantdigger.interaction.save import save_candicates
-from quantdigger.technicals import fMA
+from quantdigger.technicals import qMA
 
-class DemoStrategy(Strategy):
-    """ 策略A1 """
+class StockSearch(Strategy):
     def __init__(self, name):
-        super(DemoStrategy, self).__init__(name)
+        super(StockSearch, self).__init__(name)
         self.candicates = []
         self.to_sell = []
-    
-    def on_init(self, ctx):
-        """初始化数据""" 
-        ctx.ma10 = fMA(ctx.close, 10, 'ma10', 'y', 2)
-        ctx.ma20 = fMA(ctx.close, 20, 'ma20', 'b', 2)
-
-    def on_symbol(self, ctx):
-        if ctx.curbar > 20:
-            if ctx.ma10[1] < ctx.ma20[1] and ctx.ma10 > ctx.ma20:
-                self.candicates.append(ctx.symbol)
-            elif ctx.ma10[1] < ctx.ma20[1]:
-                self.to_sell.append(ctx.symbol)
 
     def on_bar(self, ctx):
         if(len(self.candicates) != 0):
@@ -39,12 +26,12 @@ class DemoStrategy(Strategy):
 
         for symbol in self.to_sell:
             if ctx.pos('long', symbol) > 0:
-                ctx.sell(ctx[symbol].close, 1, symbol) 
+                ctx.sell(ctx[symbol].close, 1, symbol)
                 #print "sell:", symbol
 
         for symbol in self.candicates:
             if ctx.pos('long', symbol) == 0:
-                ctx.buy(ctx[symbol].close, 1, symbol) 
+                ctx.buy(ctx[symbol].close, 1, symbol)
                 #print "buy:", symbol
 
 
@@ -56,18 +43,35 @@ class DemoStrategy(Strategy):
         print("策略运行结束．")
         return
 
+class MA10MA20(StockSearch):
+    """ 策略A1 """
+    def __init__(self, name):
+        super(MA10MA20, self).__init__(name)
+
+    def on_init(self, ctx):
+        """初始化数据""" 
+        ctx.ma10 = qMA(ctx._cur_data_context.raw_data.close, 10, 'ma10', 'y', 2)
+        ctx.ma20 = qMA(ctx._cur_data_context.raw_data.close, 20, 'ma20', 'b', 2)
+
+    def on_symbol(self, ctx):
+        if ctx.curbar > 20:
+            if ctx.ma10[1] < ctx.ma20[1] and ctx.ma10 > ctx.ma20:
+                self.candicates.append(ctx.symbol)
+            elif ctx.ma10[1] < ctx.ma20[1]:
+                self.to_sell.append(ctx.symbol)
+
 
 
 if __name__ == '__main__':
     #
     import timeit
     start = timeit.default_timer()
-    #ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
-    ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\hfq')
-    #set_symbols(['*.SH'])
+    ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
+    #ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\hfq')
+    set_symbols(['*.SH'])
     #set_symbols(['*.SZ'])
-    set_symbols(['*.SH-1.DAY'])
-    algo = DemoStrategy('A1')
+    #set_symbols(['*.SH-1.DAY'])
+    algo = MA10MA20('A1')
     profile = add_strategy([algo], { 'capital': 500000000.0 })
 
     run()
