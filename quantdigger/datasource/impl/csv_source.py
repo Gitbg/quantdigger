@@ -20,7 +20,10 @@ class CsvSource(DatasourceAbstract):
         dt_start = pd.to_datetime(dt_start)
         dt_end = pd.to_datetime(dt_end)
         data = data[(dt_start <= data.index) & (data.index <= dt_end)]
-        assert data.index.is_unique
+        #assert data.index.is_unique
+        if data.index.is_unique == False:
+            print("%s data is not unique" % pcontract)
+            data = data.drop_duplicates()
         return SourceWrapper(pcontract, data, len(data))
 
     def get_last_bars(self, pcontract, n):
