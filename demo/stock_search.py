@@ -8,7 +8,7 @@
 
 from quantdigger import *
 from quantdigger.interaction.save import save_candicates
-from quantdigger.technicals import qMA
+from quantdigger.technicals import qMA, qFT62876XY
 
 class StockSearch(Strategy):
     def __init__(self, name):
@@ -23,6 +23,13 @@ class StockSearch(Strategy):
                             ctx.ctx_datetime,
                             ctx.pcontract,
                             self.candicates)
+
+        if(len(self.to_sell) != 0):
+            save_candicates('D:\dan\stock\py_stock\quantdigger\\to_sell',
+                            ctx.strategy,
+                            ctx.ctx_datetime,
+                            ctx.pcontract,
+                            self.to_sell)
 
         for symbol in self.to_sell:
             if ctx.pos('long', symbol) > 0:
@@ -60,18 +67,31 @@ class MA10MA20(StockSearch):
             elif ctx.ma10[1] < ctx.ma20[1]:
                 self.to_sell.append(ctx.symbol)
 
+class FT62876XY(StockSearch):
+    def __init__(self, name):
+        super(FT62876XY, self).__init__(name)
 
+    def on_init(self, ctx):
+        ctx.ft62876 = qFT62876XY(ctx._cur_data_context.raw_data)
+
+    def on_symbol(self, ctx):
+        if ctx.ft62876['x'] == True:
+            self.candicates.append(ctx.symbol)
+
+        if ctx.ft62876['y'] == True:
+            self.to_sell.append(ctx.symbol)
 
 if __name__ == '__main__':
     #
     import timeit
     start = timeit.default_timer()
-    ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
-    #ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\hfq')
-    set_symbols(['*.SH'])
+    #ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
+    ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\hfq')
+    #set_symbols(['*.SH'])
     #set_symbols(['*.SZ'])
-    #set_symbols(['*.SH-1.DAY'])
-    algo = MA10MA20('A1')
+    set_symbols(pcontracts = ['*.SH-1.DAY'], dt_start = "2008-1-1", dt_end = "2017-5-17")
+    #algo = MA10MA20('A1')
+    algo = FT62876XY('62876XY')
     profile = add_strategy([algo], { 'capital': 500000000.0 })
 
     run()

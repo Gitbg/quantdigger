@@ -239,6 +239,57 @@ def DDI(DF,N,N1,M,M1):#方向标准离差指数
     VAR = pd.DataFrame(DICT)
     return VAR
 
+def FT62876XY(DF):
+    H = DF['high']
+    L = DF['low']
+    O = DF['open']
+    C = DF['close']
+
+    AA = (O + H + L + C) / 4
+    BB = MA(AA, 3)
+    B1 = HHV(AA, 60)
+    B2 = LLV(AA, 60)
+    B3 = B1 - B2
+    B4 = EMA((AA - B2) / B3, 2) * 100
+    '''
+    A1 = HHV(AA, 15)
+    A2 = LLV(AA, 15)
+    A3 = A1 - A2
+    A4 = EMA((AA - A2) / A3, 2) * 100
+    C1 = HHV(AA, 240)
+    C2 = LLV(AA, 240)
+    C3 = C1 - C2
+    C4 = EMA((AA - C2) / C3, 2) * 100
+    '''
+    Y = (B4 < REF(B4, 1)) & (B4 > 90) & (BB < REF(BB, 1))
+    X = (B4 > REF(B4, 1)) & (B4 < 5) & (C > REF(C, 1))
+    DICT = {'X': X, 'Y': Y}
+    VAR = pd.DataFrame(DICT)
+    return VAR
+
+@register_tech('qFT62876XY')
+class qFT62876XY(TechnicalBase):
+    @tech_init
+    def __init__(self, df, name = 'qFT62876XY',
+                 styles=('y', 'b'), lw = 1):
+        super(qFT62876XY, self).__init__(name)
+        self._args = [df]
+
+    def _rolling_algo(self, df, i):
+        var = FT62876XY(df)
+        return (ndarray(var['X'])[i], ndarray(var['Y'])[i])
+
+    def _vector_algo(self, df):
+        var = FT62876XY(df)
+        self.values = {
+                    'x': ndarray(var['X']),
+                    'y': ndarray(var['Y']),
+                }
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values['x'], self.styles[0], lw=self.lw)
+        self.plot_line(self.values['y'], self.styles[1], lw=self.lw)
 
 @register_tech('qMA')
 class qMA(TechnicalBase):
@@ -444,4 +495,4 @@ class LineWithX(Plotter):
         self.plot_line(self.xdata, self.values, self.style, lw=self.lw, ms=self.ms)
 
 # 'qBOLL', 'qCCI', 'qBIAS','qRSI'
-__all__ = ['qMA', 'qBOLL', 'qSMA', 'qRSI','qBIAS', 'qMACD','Volume', 'Line', 'LineWithX']
+__all__ = ['qMA', 'qBOLL', 'qSMA', 'qRSI','qBIAS', 'qMACD', 'qFT62876XY', 'Volume', 'Line', 'LineWithX']
