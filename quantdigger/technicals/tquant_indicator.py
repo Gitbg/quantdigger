@@ -267,6 +267,35 @@ def FT62876XY(DF):
     VAR = pd.DataFrame(DICT)
     return VAR
 
+def ZT62808(DF):
+    H = DF['high']
+    L = DF['low']
+    O = DF['open']
+    C = DF['close']
+
+    X = (3 * C + L + O + H) / 6
+    DKLINE = (20 * X + 19 * REF(X, 1) + 18 * REF(X, 2) + 17 * REF(X, 3) + 16 * REF(X, 4)
+              + 15 * REF(X, 5) + 14 * REF(X, 6) + 13 * REF(X, 7) + 12 * REF(X, 8)
+              + 11 * REF(X, 9) + 10 * REF(X, 10) + 9 * REF(X, 11) + 8 * REF(X, 12)
+              + 7 * REF(X, 13) + 6 * REF(X, 14) + 5 * REF(X, 15) + 4 * REF(X, 16)
+              + 3 * REF(X, 17) + 2 * REF(X, 18) + REF(X, 20)) / 210
+    return DKLINE
+
+@register_tech('qZT62808')
+class qZT62808(TechnicalBase):
+    @tech_init
+    def __init__(self, df, name = 'qZT62808', style='y', lw=1):
+        super(qZT62808, self).__init__(name)
+        self._args = [df]
+
+    def _vector_algo(self, df):
+        values = ZT62808(df)
+        self.values = ndarray(values)
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values, self.style, lw = self.lw)
+
 @register_tech('qFT62876XY')
 class qFT62876XY(TechnicalBase):
     @tech_init
@@ -495,4 +524,4 @@ class LineWithX(Plotter):
         self.plot_line(self.xdata, self.values, self.style, lw=self.lw, ms=self.ms)
 
 # 'qBOLL', 'qCCI', 'qBIAS','qRSI'
-__all__ = ['qMA', 'qBOLL', 'qSMA', 'qRSI','qBIAS', 'qMACD', 'qFT62876XY', 'Volume', 'Line', 'LineWithX']
+__all__ = ['qMA', 'qBOLL', 'qSMA', 'qRSI','qBIAS', 'qMACD', 'qFT62876XY', 'qZT62808','Volume', 'Line', 'LineWithX']
