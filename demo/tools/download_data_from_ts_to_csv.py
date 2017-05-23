@@ -320,8 +320,8 @@ def update_k_data(fqs):
         special_symbols = get_special_symbols(lastest_update_day, current_day)
 
         s_sz_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'00']
-        s_cyb_symbols = [symbol for symbol in special_symbols if symbol[0] == '3']
-        s_sh_symbols = [symbol for symbol in special_symbols if symbol[0] == '6']
+        s_cyb_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'30']
+        s_sh_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'60']
         for k, v in period.items():
             download_k_data(k, v, fq, 'SZ', s_sz_symbols, str(current_day))
             download_k_data(k, v, fq, 'SH', s_sh_symbols, str(current_day))
