@@ -29,7 +29,7 @@ class xd_stocks_spider(scrapy.Spider):
         fp_item = response.xpath(u'//td[contains(text(), "复牌日")]')
         fp_codes = fp_item.xpath('../following-sibling::tr[1]/td[1]/table[1]/tr/td/a/@onclick')
         for code in fp_codes.extract():
-            fp_stocks.append(code[-18:-12])
+            fp_stocks.append(code[24:30])
 
         yield {
             'xd_stocks': xd_stocks,
