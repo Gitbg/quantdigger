@@ -73,6 +73,11 @@ def download_k_data(period_k, period_v, fq, exchange, symbols, end, start = None
     if fq == 'bfq':
         fq = None
 
+    if period_v == 'W':
+        weekend_list, weekend = get_weekend_json(end)
+    elif period_v == 'M':
+        monthend_list, monthend = get_monthend_json(end)
+
     for symbol in symbols:
         date = start
         if date == None:
@@ -80,9 +85,13 @@ def download_k_data(period_k, period_v, fq, exchange, symbols, end, start = None
             date = formatDate(str(date), "YYYY-MM-DD")
 
         try:
-            dk = ts.get_k_data(symbol, ktype=period_v, autype=fq, start=date, end=end, retry_count=100)
+            dk = ts.get_k_data(symbol, ktype=period_v, autype=fq, start=date, end=str(end), retry_count=100)
             if not dk.empty:
                 fname = os.path.join(data_dir, symbol + '.csv')
+                if period_v == 'W':
+                    dk.loc[dk.index[-1], 'date'] = weekend
+                elif period_v == 'M':
+                    dk.loc[dk.index[-1], 'date'] = monthend
                 dk.to_csv(fname, index=False)
             else:
                 print("dk of symbol %s is empty" % symbol)
@@ -98,7 +107,7 @@ def download_k_data(period_k, period_v, fq, exchange, symbols, end, start = None
                                        'failed_download', exchange)
         if not os.path.exists(failed_file_dir):
             os.makedirs(failed_file_dir)
-        failed_file = os.path.join(failed_file_dir, end + '.json')
+        failed_file = os.path.join(failed_file_dir, str(end) + '.json')
 
         with open(failed_file, 'w') as failed_file:
             json.dump(failed_symbols, failed_file)
@@ -110,9 +119,10 @@ def download_all_k_data(symbols):
     end = get_current_datetime()
     for fq in fqs:
         for k, v in period.items():
-            download_k_data(k, v, fq, 'SZ', sz_symbols, str(end))
-            download_k_data(k, v, fq, 'SH', sh_symbols, str(end))
-            download_k_data(k, v, fq, 'CYB', cyb_symbols, str(end))
+            download_k_data(k, v, fq, 'SZ', sz_symbols, end)
+            download_k_data(k, v, fq, 'SH', sh_symbols, end)
+            download_k_data(k, v, fq, 'CYB', cyb_symbols, end)
+    genenrate_contracts(fqs, sh_symbols, sz_symbols, cyb_symbols)
 
 def update_day_k_data(fq, exchange, symbols,latest_update, current):
     dir = os.path.join(root_path, 'tushare_csv', 'k_data', fq, '1DAY', exchange)
@@ -158,25 +168,16 @@ def update_week_k_data(fq, exchange, symbols, lastest_update_day, current_day):
     failed_symbols = {"data_empty" : [],
                       "cannot_get" : [],}
 
-    year = current_day.year
-    calendar_week = os.path.join(root_path, 'py_stock', 'calendar', str(year) + '_week.txt')
-    if not os.path.exists(calendar_week):
-        print('calendar_week file is not exist')
-        exit(1)
-    with open(calendar_week, 'r') as c_week:
-        week_end = c_week.readline().split(',')
+    weekend_list, weekend = get_weekend_json(current_day)
 
     lastest_update_day = str(lastest_update_day)
     current_day = str(current_day)
-    for weekend in week_end:
-        if current_day <= weekend:
-            break
-    if lastest_update_day > week_end[week_end.index(weekend) - 1]:
+    if lastest_update_day > weekend_list[weekend_list.index(weekend) - 1]:
         for symbol in symbols:
             try:
                 dk = ts.get_k_data(symbol, ktype='W', autype=fq, start=current_day, end=current_day, retry_count=100)
                 if not dk.empty:
-                    dk['date'] = weekend
+                    dk.loc[dk.index[0], 'date'] = weekend
                     fname = os.path.join(data_dir, symbol + '.csv')
                     org_dk = pd.read_csv(fname)
                     if weekend == list(org_dk['date'])[-1]:
@@ -189,14 +190,15 @@ def update_week_k_data(fq, exchange, symbols, lastest_update_day, current_day):
                 print("symbol %s can't get" % symbol)
                 failed_symbols["cannot_get"].append(symbol)
     else:
-        for lastest_update_weekend in week_end:
+        for lastest_update_weekend in weekend_list:
             if lastest_update_day <= lastest_update_weekend:
                 break
         for symbol in symbols:
             try:
                 dk = ts.get_k_data(symbol, ktype='W', autype=fq, start=lastest_update_day, end=current_day, retry_count=100)
                 if not dk.empty:
-                    list(dk['date'])[0] = lastest_update_weekend
+                    dk.loc[dk.index[0], 'date'] = lastest_update_weekend
+                    dk.loc[dk.index[-1], 'date'] = weekend
                     fname = os.path.join(data_dir, symbol + '.csv')
                     org_dk = pd.read_csv(fname)
                     if lastest_update_weekend == list(org_dk['date'])[-1]:
@@ -227,25 +229,16 @@ def update_month_k_data(fq, exchange, symbols, lastest_update_day, current_day):
     failed_symbols = {"data_empty" : [],
                       "cannot_get" : [],}
 
-    year = current_day.year
-    calendar_month = os.path.join(root_path, 'py_stock', 'calendar', str(year) + '_month.txt')
-    if not os.path.exists(calendar_month):
-        print('calendar_month file is not exist')
-        exit(1)
-    with open(calendar_month, 'r') as c_month:
-        month_end = c_month.readline().split(',')
+    monthend_list, monthend = get_monthend_json(current_day)
 
     lastest_update_day = str(lastest_update_day)
     current_day = str(current_day)
-    for monthend in month_end:
-        if current_day <= monthend:
-            break
-    if lastest_update_day > month_end[month_end.index(monthend) - 1]:
+    if lastest_update_day > monthend_list[monthend_list.index(monthend) - 1]:
         for symbol in symbols:
             try:
                 dk = ts.get_k_data(symbol, ktype='M', autype=fq, start=current_day, end=current_day, retry_count=100)
                 if not dk.empty:
-                    dk['date'] = monthend
+                    dk.loc[dk.index[0], 'date'] = monthend
                     fname = os.path.join(data_dir, symbol + '.csv')
                     org_dk = pd.read_csv(fname)
                     if monthend == list(org_dk['date'])[-1]:
@@ -258,14 +251,15 @@ def update_month_k_data(fq, exchange, symbols, lastest_update_day, current_day):
                 print("symbol %s can't get" % symbol)
                 failed_symbols["cannot_get"].append(symbol)
     else:
-        for lastest_update_monthend in month_end:
+        for lastest_update_monthend in monthend_list:
             if lastest_update_day <= lastest_update_monthend:
                 break
         for symbol in symbols:
             try:
                 dk = ts.get_k_data(symbol, ktype='M', autype=fq, start=lastest_update_day, end=current_day, retry_count=100)
                 if not dk.empty:
-                    list(dk['date'])[0] = lastest_update_monthend
+                    dk.loc[dk.index[0], 'date'] = lastest_update_monthend
+                    dk.loc[dk.index[-1], 'date'] = monthend
                     fname = os.path.join(data_dir, symbol + '.csv')
                     org_dk = pd.read_csv(fname)
                     if lastest_update_monthend == list(org_dk['date'])[-1]:
@@ -288,6 +282,49 @@ def update_month_k_data(fq, exchange, symbols, lastest_update_day, current_day):
         with open(failed_file, 'w') as failed_file:
             json.dump(failed_symbols, failed_file)
 
+def genenrate_contracts_of_total_symbols(fqs):
+    total_symbols = stocks_basics.sort_index().index
+    t_sz_symbols = [symbol for symbol in total_symbols if symbol[0] == '0']
+    t_cyb_symbols = [symbol for symbol in total_symbols if symbol[0] == '3']
+    t_sh_symbols = [symbol for symbol in total_symbols if symbol[0] == '6']
+
+    genenrate_contracts(fqs, t_sh_symbols, t_sz_symbols, t_cyb_symbols)
+
+def update_last_day_k_data(fqs):
+    total_symbols = stocks_basics.sort_index().index
+    t_sz_symbols = [symbol for symbol in total_symbols if symbol[0] == '0']
+    t_cyb_symbols = [symbol for symbol in total_symbols if symbol[0] == '3']
+    t_sh_symbols = [symbol for symbol in total_symbols if symbol[0] == '6']
+
+    genenrate_contracts(fqs, t_sh_symbols, t_sz_symbols, t_cyb_symbols)
+    for fq in fqs:
+        lastest_update_day = get_latest_update_datetime('1DAY', fq, 'SZ')
+        current_day = get_current_datetime()
+        last_day = current_day - datetime.timedelta(days=1)
+        special_symbols = get_special_symbols(lastest_update_day, last_day)
+
+        s_sz_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'00']
+        s_cyb_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'30']
+        s_sh_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'60']
+        for k, v in period.items():
+            download_k_data(k, v, fq, 'SZ', s_sz_symbols, last_day)
+            download_k_data(k, v, fq, 'SH', s_sh_symbols, last_day)
+            download_k_data(k, v, fq, 'CYB', s_cyb_symbols, last_day)
+
+        u_sz_symbols = set(t_sz_symbols) - set(s_sz_symbols)
+        u_cyb_symbols = set(t_cyb_symbols) - set(s_cyb_symbols)
+        u_sh_symbols = set(t_sh_symbols) - set(s_sh_symbols)
+
+        update_day_k_data(fq, 'SZ', u_sz_symbols, lastest_update_day, last_day)
+        update_day_k_data(fq, 'SH', u_sh_symbols, lastest_update_day, last_day)
+        update_day_k_data(fq, 'CYB', u_cyb_symbols, lastest_update_day, last_day)
+        update_week_k_data(fq, 'SZ', u_sz_symbols, lastest_update_day, last_day)
+        update_week_k_data(fq, 'SH', u_sh_symbols, lastest_update_day, last_day)
+        update_week_k_data(fq, 'CYB', u_cyb_symbols, lastest_update_day, last_day)
+        update_month_k_data(fq, 'SZ', u_sz_symbols, lastest_update_day, last_day)
+        update_month_k_data(fq, 'SH', u_sh_symbols, lastest_update_day, last_day)
+        update_month_k_data(fq, 'CYB', u_cyb_symbols, lastest_update_day, last_day)
+
 def genenrate_contracts(fqs, t_sh_symbols, t_sz_symbols, t_cyb_symbols):
     for fq in fqs:
         dir = os.path.join(root_path, 'tushare_csv', 'k_data', fq)
@@ -305,40 +342,6 @@ def genenrate_contracts(fqs, t_sh_symbols, t_sz_symbols, t_cyb_symbols):
                       'exchange': exchanges,
                       'long_margin_ratio': long_margin_ratio,
                       'volume_multiple': volume_multiple}).to_csv(fname, index=False)
-
-
-def update_k_data(fqs):
-    total_symbols = stocks_basics.sort_index().index
-    t_sz_symbols = [symbol for symbol in total_symbols if symbol[0] == '0']
-    t_cyb_symbols = [symbol for symbol in total_symbols if symbol[0] == '3']
-    t_sh_symbols = [symbol for symbol in total_symbols if symbol[0] == '6']
-
-    genenrate_contracts(fqs, t_sh_symbols, t_sz_symbols, t_cyb_symbols)
-    for fq in fqs:
-        lastest_update_day = get_latest_update_datetime('1DAY', fq, 'SZ')
-        current_day = get_current_datetime()
-        special_symbols = get_special_symbols(lastest_update_day, current_day)
-
-        s_sz_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'00']
-        s_cyb_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'30']
-        s_sh_symbols = [symbol for symbol in special_symbols if symbol[0:2] == u'60']
-        for k, v in period.items():
-            download_k_data(k, v, fq, 'SZ', s_sz_symbols, str(current_day))
-            download_k_data(k, v, fq, 'SH', s_sh_symbols, str(current_day))
-            download_k_data(k, v, fq, 'CYB', s_cyb_symbols, str(current_day))
-
-        u_sz_symbols = set(t_sz_symbols) - set(s_sz_symbols)
-        u_cyb_symbols = set(t_cyb_symbols) - set(s_cyb_symbols)
-        u_sh_symbols = set(t_sh_symbols) - set(s_sh_symbols)
-        update_day_k_data(fq, 'SZ', u_sz_symbols, lastest_update_day, current_day)
-        update_day_k_data(fq, 'SH', u_sh_symbols, lastest_update_day, current_day)
-        update_day_k_data(fq, 'CYB', u_cyb_symbols, lastest_update_day, current_day)
-        update_week_k_data(fq, 'SZ', u_sz_symbols, lastest_update_day, current_day)
-        update_week_k_data(fq, 'SH', u_sh_symbols, lastest_update_day, current_day)
-        update_week_k_data(fq, 'CYB', u_cyb_symbols, lastest_update_day, current_day)
-        update_month_k_data(fq, 'SZ', u_sz_symbols, lastest_update_day, current_day)
-        update_month_k_data(fq, 'SH', u_sh_symbols, lastest_update_day, current_day)
-        update_month_k_data(fq, 'CYB', u_cyb_symbols, lastest_update_day, current_day)
 
 def get_latest_update_datetime(period_k, fq, exchange):
     datetimes = []
@@ -391,9 +394,95 @@ def get_special_symbols(latest_update, current):
         update_day = update_day + datetime.timedelta(days=1)
     return specail_symbols
 
-update_k_data(fqs)
+def get_weekend_txt(current_day):
+    year = current_day.year
+    calendar_week = os.path.join(root_path, 'py_stock', 'calendar', str(year) + '_week.txt')
+    if not os.path.exists(calendar_week):
+        print('calendar_week file is not exist')
+        exit(1)
+    with open(calendar_week, 'r') as c_week:
+        weekend_list = c_week.readline().split(',')
+
+    current_day = str(current_day)
+    for weekend in weekend_list:
+        if current_day <= weekend:
+            break
+
+    return weekend_list, weekend
+
+def get_monthend_txt(current_day):
+    year = current_day.year
+    calendar_month = os.path.join(root_path, 'py_stock', 'calendar', str(year) + '_month.txt')
+    if not os.path.exists(calendar_month):
+        print('calendar_month file is not exist')
+        exit(1)
+    with open(calendar_month, 'r') as c_month:
+        monthend_list = c_month.readline().split(',')
+
+    current_day = str(current_day)
+    for monthend in monthend_list:
+        if current_day <= monthend:
+            break
+
+    return monthend_list, monthend
+
+def get_weekend_json(current_day):
+    year = current_day.year
+    week_path = os.path.join(root_path, 'py_stock', 'calendar', str(year) + '_week.json')
+    if not os.path.exists(week_path):
+        print('calendar_week file is not exist')
+        exit(1)
+    with open(week_path, 'r') as json_file:
+        calendar_week = json.load(json_file)
+        weekstart_list = calendar_week[0][str(year) + '_weekstart']
+        weekend_list = calendar_week[0][str(year) + '_weekend']
+
+    current_day = str(current_day)
+    for weekend in weekend_list:
+        if current_day <= weekend:
+            break
+
+    weekend_index = weekend_list.index(weekend)
+    if current_day < weekstart_list[weekend_index]:
+        if weekend_index == 0:
+            print "The first trading day of this year is not begin"
+            return None, None
+        else:
+            weekend = weekend_list[weekend_index - 1]
+
+    return weekend_list, weekend
+
+def get_monthend_json(current_day):
+    year = current_day.year
+    month_path = os.path.join(root_path, 'py_stock', 'calendar', str(year) + '_month.json')
+    if not os.path.exists(month_path):
+        print('calendar_month file is not exist')
+        exit(1)
+    with open(month_path, 'r') as json_file:
+        calendar_month = json.load(json_file)
+        monthstart_list = calendar_month[0][str(year) + '_monthstart']
+        monthend_list = calendar_month[0][str(year) + '_monthend']
+
+    current_day = str(current_day)
+    for monthend in monthend_list:
+        if current_day <= monthend:
+            break
+
+    monthend_index = monthend_list.index(monthend)
+    if current_day < monthstart_list[monthend_index]:
+        if monthend_index == 0:
+            print "The first trading day of this year is not begin"
+            return None, None
+        else:
+            monthend = monthend_list[monthend_index - 1]
+
+    return monthend_list, monthend
+
+#update_last_day_k_data(fqs)
 
 #update_all_hist_data(symbols)
 #download_all_hist_data(symbols)
 #download_all_k_data(symbols)
+#genenrate_contracts_of_total_symbols(fqs)
+update_last_day_k_data(('qfq',))
 #update_all_k_data(symbols)
