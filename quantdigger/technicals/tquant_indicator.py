@@ -64,10 +64,7 @@ def MIN  (A,B):
     return var
 
 def IF (COND,V1,V2):
-    var = np.where(COND, V1, V2)
-    for i in range(len(var)):
-        V1[i] = var[i]
-    return V1
+    return pd.Series(np.where(COND, V1, V2))
 
 def REF(DF,N):
     var = DF.diff(N)
@@ -153,9 +150,9 @@ def ROC(DF,N,M):#变动率指标
 
 def MTM(DF,N,M):#动量线
     C = DF['close']
-    mtm = C - REF(C, N)
-    MTMMA= MA(mtm, M)
-    DICT = {'MTM': mtm, 'MTMMA': MTMMA}
+    MTM = C - REF(C, N)
+    MTMMA= MA(MTM, M)
+    DICT = {'MTM': MTM, 'MTMMA': MTMMA}
     VAR = pd.DataFrame(DICT)
     return VAR
 
@@ -239,6 +236,19 @@ def DDI(DF,N,N1,M,M1):#方向标准离差指数
     VAR = pd.DataFrame(DICT)
     return VAR
 
+def VR(DF,N,M):
+    CLOSE = DF['close']
+    VOL = DF['volume']
+    TH = SUM(IF(CLOSE > REF(CLOSE, 1), VOL, 0), N)
+    TL = SUM(IF(CLOSE < REF(CLOSE, 1), VOL, 0), N)
+    TQ = SUM(IF(CLOSE < REF(CLOSE, 1), VOL, 0), N)
+    VR = 100 * (TH * 2 + TQ) / (TL * 2 + TQ)
+    MAVR = MA(VR, M)
+
+    DICT = {'VR': VR, 'MAVR': MAVR}
+    VAR = pd.DataFrame(DICT)
+    return VAR
+
 def FT62876XY(DF):
     H = DF['high']
     L = DF['low']
@@ -267,6 +277,26 @@ def FT62876XY(DF):
     VAR = pd.DataFrame(DICT)
     return VAR
 
+def ZT62808VAR19(DF):
+    C = DF['close']
+
+    VAR1 = (C > REF(C, 1)) & (C > REF(C, 2))
+    VARD = (C < REF(C, 1)) & (C < REF(C, 2))
+    VARE = REF(VARD, 1) & (C >= REF(C, 1)) & (C <= REF(C, 2))
+    VARF = REF(VARE, 1) & (C <= REF(C, 1)) & (C >= REF(C, 2))
+    VAR10 = REF(VARF, 1) & (C >= REF(C, 1)) & (C <= REF(C, 2))
+    VAR11 = REF(VAR10, 1) & (C <= REF(C, 1)) & (C >= REF(C, 2))
+    VAR12 = REF(VAR11, 1) & (C >= REF(C, 1)) & (C <= REF(C, 2))
+    VAR13 = REF(VAR12, 1) & (C <= REF(C, 1)) & (C >= REF(C, 2))
+    VAR14 = REF(VAR13, 1) & (C >= REF(C, 1)) & (C <= REF(C, 2))
+    VAR15 = REF(VAR14, 1) & (C <= REF(C, 1)) & (C >= REF(C, 2))
+    VAR16 = REF(VAR15, 1) & (C >= REF(C, 1)) & (C <= REF(C, 2))
+    VAR17 = REF(VAR16, 1) & (C <= REF(C, 1)) & (C >= REF(C, 2))
+    VAR18 = REF(VAR17, 1) & (C >= REF(C, 1)) & (C <= REF(C, 2))
+    VAR19 = REF(VARD | VARE | VARF | VAR10 | VAR11 | VAR12 | VAR13 | VAR14 | VAR15 | VAR16 | VAR17 | VAR18, 1) & VAR1
+
+    return VAR19
+
 def ZT62808(DF):
     H = DF['high']
     L = DF['low']
@@ -279,6 +309,7 @@ def ZT62808(DF):
               + 11 * REF(X, 9) + 10 * REF(X, 10) + 9 * REF(X, 11) + 8 * REF(X, 12)
               + 7 * REF(X, 13) + 6 * REF(X, 14) + 5 * REF(X, 15) + 4 * REF(X, 16)
               + 3 * REF(X, 17) + 2 * REF(X, 18) + REF(X, 20)) / 210
+
     return DKLINE
 
 @register_tech('qZT62808')
@@ -290,6 +321,21 @@ class qZT62808(TechnicalBase):
 
     def _vector_algo(self, df):
         values = ZT62808(df)
+        self.values = ndarray(values)
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values, self.style, lw = self.lw)
+
+@register_tech('qZT62808_VAR19')
+class qZT62808_VAR19(TechnicalBase):
+    @tech_init
+    def __init__(self, df, name = 'qZT62808_VAR19', style='y', lw=1):
+        super(qZT62808_VAR19, self).__init__(name)
+        self._args = [df]
+
+    def _vector_algo(self, df):
+        values = ZT62808VAR19(df)
         self.values = ndarray(values)
 
     def plot(self, widget):
@@ -319,6 +365,44 @@ class qFT62876XY(TechnicalBase):
         self.widget = widget
         self.plot_line(self.values['x'], self.styles[0], lw=self.lw)
         self.plot_line(self.values['y'], self.styles[1], lw=self.lw)
+
+@register_tech('qMTM')
+class qMTM(TechnicalBase):
+    @tech_init
+    def __init__(self, df, n, m, name = 'qMTM', style=('y', 'b'), lw=1):
+        super(qMTM, self).__init__(name)
+        self._args = [df, n, m]
+
+    def _vector_algo(self, df, n, m):
+        values = MTM(df, n, m)
+        self.values = {
+            'mtm': ndarray(values['MTM']),
+            'mtmma':ndarray(values['MTMMA'])
+        }
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values['mtm'], self.style[0], lw = self.lw)
+        self.plot_line(self.values['mtmma'], self.style[1], lw=self.lw)
+
+@register_tech('qVR')
+class qVR(TechnicalBase):
+    @tech_init
+    def __init__(self, df, n, m, name = 'qVR', style=('y', 'b'), lw=1):
+        super(qVR, self).__init__(name)
+        self._args = [df, n, m]
+
+    def _vector_algo(self, df, n, m):
+        values = VR(df, n, m)
+        self.values = {
+            'vr': ndarray(values['VR']),
+            'mavr':ndarray(values['MAVR'])
+        }
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values['vr'], self.style[0], lw = self.lw)
+        self.plot_line(self.values['mavr'], self.style[1], lw=self.lw)
 
 @register_tech('qMA')
 class qMA(TechnicalBase):
@@ -524,4 +608,6 @@ class LineWithX(Plotter):
         self.plot_line(self.xdata, self.values, self.style, lw=self.lw, ms=self.ms)
 
 # 'qBOLL', 'qCCI', 'qBIAS','qRSI'
-__all__ = ['qMA', 'qBOLL', 'qSMA', 'qRSI','qBIAS', 'qMACD', 'qFT62876XY', 'qZT62808','Volume', 'Line', 'LineWithX']
+__all__ = ['qMA', 'qBOLL', 'qSMA', 'qRSI','qBIAS', 'qMACD',
+           'qFT62876XY', 'qZT62808', 'qZT62808_VAR19', 'Volume',
+           'qMTM', 'qVR', 'Line', 'LineWithX']
