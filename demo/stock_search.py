@@ -8,7 +8,7 @@
 
 from quantdigger import *
 from quantdigger.interaction.save import save_candicates
-from quantdigger.technicals import qMA, qFT62876XY
+from quantdigger.technicals import qMA, qFT62876XY, qZT62808, qMACD,qZT62808_VAR19, qVR, qMTM
 
 class StockSearch(Strategy):
     def __init__(self, name):
@@ -81,18 +81,276 @@ class FT62876XY(StockSearch):
         if ctx.ft62876['y'] == True:
             self.to_sell.append(ctx.symbol)
 
+class ZT62808DKLINE_MACD(StockSearch):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD, self).__init__(name)
+
+    def on_init(self, ctx):
+        ctx.zt62808dkline = qZT62808(ctx._cur_data_context.raw_data)
+        ctx.macd = qMACD(ctx._cur_data_context.raw_data.close, 12, 26, 9)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and ctx.macd['macd'] > 0
+            and (ctx.macd['diff'] - ctx.macd['dea'] < 0.01)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and (ctx.close <= ctx.open and ctx.volume < ctx.volume[1]
+                 or ctx.close > ctx.open and ctx.volume > ctx.volume[1])):
+                self.candicates.append(ctx.symbol)
+
+# MACD三项大于0，点水0.01，上穿多空线，收盘价大于开盘价，量增
+class ZT62808DKLINE_MACD0(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD0, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and ctx.macd['macd'] > 0
+            and (ctx.macd['diff'] - ctx.macd['dea'] < 0.01)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close > ctx.open and ctx.volume > ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
+# MACD两项大于0，点水0.01，上穿多空线，收盘价小于等于开盘价，量减
+class ZT62808DKLINE_MACD1(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD1, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and (abs(ctx.macd['diff'] - ctx.macd['dea']) < 0.01)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close <= ctx.open and ctx.volume < ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
+# MACD两项大于0，点水0.01，上穿多空线，收盘价大于开盘价，量增
+class ZT62808DKLINE_MACD2(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD2, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and (abs(ctx.macd['diff'] - ctx.macd['dea']) < 0.01)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close > ctx.open and ctx.volume > ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
+# MACD两项大于0，点水0.03，上穿多空线，收盘价小于等于开盘价，量减
+class ZT62808DKLINE_MACD3(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD3, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and (abs(ctx.macd['diff'] - ctx.macd['dea']) < 0.03)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close <= ctx.open and ctx.volume < ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
+# MACD两项大于0，点水0.03，上穿多空线，收盘价大于开盘价，量增
+class ZT62808DKLINE_MACD4(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD4, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and (abs(ctx.macd['diff'] - ctx.macd['dea']) < 0.03)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close > ctx.open and ctx.volume > ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
+class ZT62808DKLINE_MACD99(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD99, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and ctx.macd['macd'] < 0
+            and ctx.macd['macd'] > ctx.macd['macd'][1]
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close > ctx.open and ctx.volume > ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
+# MACD点水0.03，上穿多空线，收盘价大于开盘价，量增
+class ZT62808DKLINE_MACD6(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD6, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if ((abs(ctx.macd['diff'] - ctx.macd['dea']) < 0.03)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close > ctx.open and ctx.volume > ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
+# MACD点水0.03，macd大于0，或macd小于0且macd缩短， 上穿多空线，收盘价大于开盘价，量增
+class ZT62808DKLINE_MACD7(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD7, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if ((abs(ctx.macd['diff'] - ctx.macd['dea']) < 0.03)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close > ctx.open
+            and ctx.volume > ctx.volume[1]):
+                if(ctx.macd['macd'] >= 0
+                   or (ctx.macd['macd'] < 0
+                       and ctx.macd['macd'] > ctx.macd['macd'][1])):
+                        self.candicates.append(ctx.symbol)
+
+class ZT62808DKLINE_MACD8(ZT62808DKLINE_MACD):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD8, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and (abs(ctx.macd['diff'] - ctx.macd['dea']) <= 0.06)
+            and (abs(ctx.macd['diff'] - ctx.macd['dea']) >= 0.03)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close > ctx.open and ctx.volume > ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
+class ZT62808DKLINE_MA0(StockSearch):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MA0, self).__init__(name)
+
+    def on_init(self,ctx):
+        ctx.zt62808dkline = qZT62808(ctx._cur_data_context.raw_data)
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if ctx.ma5 > ctx.zt62808dkline:
+            self.candicates.append(ctx.symbol)
+
+class ZT62808DKLINE_MA1(StockSearch):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MA1, self).__init__(name)
+
+    def on_init(self,ctx):
+        ctx.zt62808dkline = qZT62808(ctx._cur_data_context.raw_data)
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if ctx.ma5 > ctx.zt62808dkline \
+            and ctx.ma5 < ctx.ma5[1] \
+            and ctx.ma5[1] < ctx.ma5[2] \
+            and ctx.close >= ctx.zt62808dkline \
+            and ctx.close < ctx.ma5:
+            self.candicates.append(ctx.symbol)
+        elif ctx.ma5 <= ctx.zt62808dkline \
+            and ctx.ma5 > ctx.ma5[1] \
+            and ctx.ma5[1] > ctx.ma5[2] \
+            and ctx.close >= ctx.ma5 \
+            and ctx.close < ctx.zt62808dkline:
+            self.candicates.append(ctx.symbol)
+
+class ZT62808DKLINE_MA2(StockSearch):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MA2, self).__init__(name)
+
+    def on_init(self,ctx):
+        ctx.zt62808dkline = qZT62808(ctx._cur_data_context.raw_data)
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if ctx.ma5 > ctx.zt62808dkline \
+            and ctx.ma5 > ctx.ma5[1] \
+            and ctx.ma5[1] < ctx.ma5[2] \
+            and ctx.close >= ctx.zt62808dkline \
+            and ctx.close < ctx.ma5:
+            self.candicates.append(ctx.symbol)
+        elif ctx.ma5 <= ctx.zt62808dkline \
+            and ctx.ma5 > ctx.ma5[1] \
+            and ctx.ma5[1] < ctx.ma5[2] \
+            and ctx.close >= ctx.ma5 \
+            and ctx.close < ctx.zt62808dkline:
+            self.candicates.append(ctx.symbol)
+
+class ZT62808DKLINE_MA3(StockSearch):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MA3, self).__init__(name)
+
+    def on_init(self,ctx):
+        ctx.zt62808dkline = qZT62808(ctx._cur_data_context.raw_data)
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if ctx.ma5 > ctx.zt62808dkline \
+            and ctx.ma5 < ctx.ma5[1] \
+            and ctx.ma5[1] < ctx.ma5[2] \
+            and ctx.close >= ctx.zt62808dkline \
+            and ctx.close < ctx.ma5:
+            self.candicates.append(ctx.symbol)
+
+class ZT62808DKLINE_VAR19_VR_MTM_MACD(StockSearch):
+    def __init__(self, name):
+        super(ZT62808DKLINE_VAR19_VR_MTM_MACD, self).__init__(name)
+
+    def on_init(self, ctx):
+        ctx.zt62808dkline = qZT62808(ctx._cur_data_context.raw_data)
+        ctx.zt62808var19 = qZT62808_VAR19(ctx._cur_data_context.raw_data)
+        ctx.macd = qMACD(ctx._cur_data_context.raw_data.close, 12, 26, 9)
+        ctx.vr = qVR(ctx._cur_data_context.raw_data, 26, 6)
+        ctx.mtm = qMTM(ctx._cur_data_context.raw_data, 15, 5)
+
+    def on_symbol(self, ctx):
+        if((abs(ctx.macd['diff'] - ctx.macd['dea']) <= 0.03)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.close > ctx.open
+            and ctx.volume > ctx.volume[1]):
+            if((ctx.vr['vr'] >= ctx.vr['mavr'] and ctx.mtm['mtm'] >= ctx.mtm['mtmma'])
+               or (ctx.vr['vr'] >= ctx.vr['mavr'] and ctx.zt62808var19)
+               or (ctx.mtm['mtm'] >= ctx.mtm['mtmma'] and ctx.zt62808var19)):
+                self.candicates.append(ctx.symbol)
+
 if __name__ == '__main__':
     #
     import timeit
     start = timeit.default_timer()
     #ConfigUtil.set(data_path='D:\dan\stock\py_stock\quantdigger\data\data')
-    ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\hfq')
+    ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\qfq')
     #set_symbols(['*.SH'])
     #set_symbols(['*.SZ'])
-    set_symbols(pcontracts = ['*.SH-1.DAY'], dt_start = "2008-1-1", dt_end = "2017-5-17")
+    set_symbols(pcontracts = ['*.SH-1.DAY', '*.SZ-1.DAY'], dt_start = "2015-01-01", dt_end = "2017-06-23")
+    #set_symbols(pcontracts=['*.SZ-1.DAY'], dt_start="2017-02-20", dt_end="2017-06-14")
+    #set_symbols(pcontracts=['*.SH-1.DAY'], dt_start="2017-02-20", dt_end="2017-06-14")
+    #set_symbols(pcontracts=['*.SH-1.WEEK', '*.SZ-1.WEEK'], dt_start="2015-01-01", dt_end="2017-06-23")
     #algo = MA10MA20('A1')
-    algo = FT62876XY('62876XY')
-    profile = add_strategy([algo], { 'capital': 500000000.0 })
+    #algo = FT62876XY('62876XY')
+    #algo = ZT62808DKLINE_MACD('ZT62808DKLINE_MACD')
+    algo = ZT62808DKLINE_VAR19_VR_MTM_MACD('ZT62808DKLINE_VAR19_VR_MTM_MACD')
+    algo0 = ZT62808DKLINE_MACD0('ZT62808DKLINE_MACD0')
+    algo1 = ZT62808DKLINE_MACD1('ZT62808DKLINE_MACD1')
+    algo2 = ZT62808DKLINE_MACD2('ZT62808DKLINE_MACD2')
+    algo3 = ZT62808DKLINE_MACD1('ZT62808DKLINE_MACD3')
+    algo4 = ZT62808DKLINE_MACD4('ZT62808DKLINE_MACD4')
+    algo6 = ZT62808DKLINE_MACD6('ZT62808DKLINE_MACD6')
+    algo7 = ZT62808DKLINE_MACD7('ZT62808DKLINE_MACD7')
+    algo8 = ZT62808DKLINE_MACD8('ZT62808DKLINE_MACD8')
+    algoma0 = ZT62808DKLINE_MA0('ZT62808DKLINE_MA0')
+    algoma1 = ZT62808DKLINE_MA1('ZT62808DKLINE_MA1')
+    algoma2 = ZT62808DKLINE_MA2('ZT62808DKLINE_MA2')
+    algoma3 = ZT62808DKLINE_MA3('ZT62808DKLINE_MA3')
+    profile = add_strategy([algo4, algo7], { 'capital': 500000000.0 })
+    #profile = add_strategy([algoma1, algoma2, algoma3], {'capital': 500000000.0})
 
     run()
 
