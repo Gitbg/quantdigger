@@ -462,7 +462,8 @@ class Period(object):
         "DAY": 4,
         "MONTH": 5,
         "SEASON": 6,
-        "YEAR": 7
+        "YEAR": 7,
+        "WEEK": 8
     }
 
     def __init__(self, strperiod):
@@ -483,6 +484,7 @@ class Period(object):
     def to_timedelta(self):
         m = {
             'DAY': 'days',
+            'WEEK': 'weeks',
             'HOUR': 'hours',
             'MINUTE': 'minutes',
             'SECOND': 'seconds',
