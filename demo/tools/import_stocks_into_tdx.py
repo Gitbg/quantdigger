@@ -1,5 +1,3 @@
-import pandas as pd
-import tushare as ts
 import os
 import string
 import json
@@ -23,6 +21,38 @@ def generate_cfg_string(tdx_board_name):
 
     return cfg_string
 
+
+def remove_stocks_from_tdx(tdx_dir,
+                           periods,
+                           strategies):
+    if not os.path.exists(tdx_dir):
+        print("The tdx directory, %s, not exist." % tdx_dir)
+        exit(1)
+
+    cfg_path = os.path.join(tdx_dir, 'blocknew.cfg')
+    if not os.path.exists(cfg_path):
+        cfg_file = open(cfg_path, 'wb+')
+        cfg = ''
+    else:
+        cfg_file = open(cfg_path, 'rb')
+        cfg = cfg_file.read()
+        cfg_file.close()
+        cfg_file = open(cfg_path, 'wb')
+
+    file_list = os.listdir(tdx_dir)
+
+    for period_k, period_v in periods.items():
+        for strategy in strategies:
+            tdx_board_name = period_v + strategy
+            for blk in file_list:
+                if blk.startswith(tdx_board_name):
+                    blk_file = os.path.join(tdx_dir, blk)
+                    os.remove(blk_file)
+                    cfg_string = generate_cfg_string(blk[:-4])
+                    cfg.replace(cfg_string, '')
+                    file_list.remove(blk)
+    cfg_file.write(cfg)
+    cfg_file.close()
 
 def import_stocks_into_tdx(tdx_dir,
                            stock_search_dir,
@@ -124,8 +154,7 @@ def daily_import_stocks_into_tdx(week_dir,
                                  tdx_dir,
                                  stock_search_dir,
                                  periods,
-                                 strategies,
-                                 start_day):
+                                 strategies):
     current_day = datetime.date.today()
     last_day = current_day - datetime.timedelta(days=1)
     weekend, offset = get_cur_weekend_and_offset(last_day, week_dir)
@@ -133,7 +162,7 @@ def daily_import_stocks_into_tdx(week_dir,
                            stock_search_dir,
                            periods,
                            strategies,
-                           start_day,
+                           str(last_day),
                            str(weekend),
                            str(weekend),
                            offset)
@@ -141,16 +170,24 @@ def daily_import_stocks_into_tdx(week_dir,
 '''
 import_stocks_into_tdx('D:\\new_qlzq_v6\T0002\\blocknew',
                        'D:\dan\stock\py_stock\quantdigger\candicates',
-                       {'1DAY': '1D', '1WEEK': '1W',},
-                       ['ZT62808DKLINE_MACD4', 'ZT62808DKLINE_MACD7', 'ZT62808DKLINE_MA3','ZT62808DKLINE_MA3',],
-                       '2017-05-10',
-                       '2017-06-23'
+                       {'1DAY': '1D',},
+                       ['MACD_MA8'],
+                       '2016-01-10',
+                       '2016-12-07'
                        )
+
+
+
+remove_stocks_from_tdx('D:\\new_qlzq_v6\T0002\\blocknew',
+                       {'1DAY': '1D',},
+                       ['ZT62808DKLINE_MACD4',])
 '''
+
 
 daily_import_stocks_into_tdx('D:\dan\stock\py_stock\calendar\\2017_week.json',
                              'D:\\new_qlzq_v6\T0002\\blocknew',
                              'D:\dan\stock\py_stock\quantdigger\candicates',
-                             {'1DAY': '1D', '1WEEK': '1W',},
-                             ['ZT62808DKLINE_MACD4', 'ZT62808DKLINE_MACD7', 'ZT62808DKLINE_MA2','ZT62808DKLINE_MA3',],
-                             '2017-06-19')
+                             {'1DAY': '1D',},
+                             ['MACD_MA7', 'MACD_MA8'],
+                             )
+
