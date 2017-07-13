@@ -372,7 +372,7 @@ class Contract(object):
             logger.exception()
         self.exchange = exchange
         self.code = code
-        if self.exchange == 'SZ' or self.exchange == 'SH':
+        if self.exchange == 'SZ' or self.exchange == 'SH' or self.exchange == 'CYB':
             self.is_stock = True
         elif self.exchange == 'SHFE':
             self.is_stock = False
