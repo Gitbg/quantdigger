@@ -81,6 +81,23 @@ class FT62876XY(StockSearch):
         if ctx.ft62876['y'] == True:
             self.to_sell.append(ctx.symbol)
 
+class MACD_ONLY0(StockSearch):
+    def __init__(self, name):
+        super(MACD_ONLY0, self).__init__(name)
+
+    def on_init(self,ctx):
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+        ctx.ma10 = qMA(ctx._cur_data_context.raw_data.close, 10, 'ma10', 'y', 2)
+        ctx.ma20 = qMA(ctx._cur_data_context.raw_data.close, 20, 'ma20', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if (ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
+            and ctx.ma10[1] <= ctx.ma10
+            and ctx.ma5[1] <= ctx.ma5
+            and ctx.ma5[1] <= ctx.ma10[1]
+            and ctx.ma10 <= ctx.ma5):
+            self.candicates.append(ctx.symbol)
+
 class MACD_MA0(StockSearch):
     def __init__(self, name):
         super(MACD_MA0, self).__init__(name)
@@ -250,7 +267,22 @@ class MACD_MA9(MACD_MA0):
             and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
             and (not (ctx.ma5 < ctx.ma10 and ctx.ma5 < ctx.ma5[1]))
             and ctx.low <= ctx.ma20
-            and ctx.ma10 >= ctx.close >= ctx.ma20):
+            and ctx.close >= ctx.ma5):
+                self.candicates.append(ctx.symbol)
+
+class MACD_MA10(MACD_MA0):
+    def __init__(self, name):
+        super(MACD_MA10, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (abs(ctx.macd['diff'] - ctx.macd['dea']) <= 0.04
+            and ctx.ma10 > ctx.ma20
+            and ctx.ma10[1] > ctx.ma20[1]
+            and ctx.ma10[2] > ctx.ma20[2]
+            and ctx.ma10[2] <= ctx.ma10[1] <= ctx.ma10
+            and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
+            and ctx.low <= ctx.ma20
+            and ctx.close >= ctx.ma5):
                 self.candicates.append(ctx.symbol)
 
 class ZT62808DKLINE_MACD(StockSearch):
@@ -513,7 +545,7 @@ if __name__ == '__main__':
     ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\qfq')
     #set_symbols(['*.SH'])
     #set_symbols(['*.SZ'])
-    set_symbols(pcontracts = ['*.SH-1.DAY', '*.SZ-1.DAY', '*.CYB-1.DAY'], dt_start = "2016-01-01", dt_end = "2017-07-14")
+    set_symbols(pcontracts = ['*.SH-1.DAY', '*.SZ-1.DAY', '*.CYB-1.DAY'], dt_start = "2016-01-01", dt_end = "2017-08-11")
     #set_symbols(pcontracts=['*.SZ-1.DAY'], dt_start="2017-02-20", dt_end="2017-06-14")
     #set_symbols(pcontracts=['*.CYB-1.DAY'], dt_start="2017-02-20", dt_end="2017-06-14")
     #set_symbols(pcontracts=['*.SH-1.WEEK', '*.SZ-1.WEEK', '*.CYB-1.WEEK'], dt_start="2015-01-01", dt_end="2017-06-23")
@@ -540,6 +572,8 @@ if __name__ == '__main__':
     algo17 = MACD_MA7('MACD_MA7')
     algo18 = MACD_MA8('MACD_MA8')
     algo19 = MACD_MA9('MACD_MA9')
+    algo1a = MACD_MA10('MACD_MA10')
+    algo20 = MACD_ONLY0('MACD_ONLY0')
 
 
     algoma0 = ZT62808DKLINE_MA0('ZT62808DKLINE_MA0')
@@ -548,7 +582,8 @@ if __name__ == '__main__':
     algoma3 = ZT62808DKLINE_MA3('ZT62808DKLINE_MA3')
     #profile = add_strategy([algo4, algo7], { 'capital': 500000000.0 })
     #profile = add_strategy([algo10, algo11, algo12, algo13, algo15, algo16], {'capital': 500000000.0})
-    profile = add_strategy([algo19], {'capital': 500000000.0})
+    profile = add_strategy([algo17, algo18, algo19, algo20], {'capital': 500000000.0})
+    #profile = add_strategy([algo20], {'capital': 500000000.0})
     #profile = add_strategy([algoma1, algoma2, algoma3], {'capital': 500000000.0})
 
     run()
