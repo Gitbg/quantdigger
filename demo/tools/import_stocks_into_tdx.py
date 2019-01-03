@@ -204,6 +204,59 @@ def import_stocks_into_ths(ths_dir,
         cfg_file.writelines(cfglines)
         cfg_file.close()
 
+def import_stocks_into_ths_v2(ths_dir,
+                           stock_search_dir,
+                           periods,
+                           strategies,
+                           start_day,
+                           end_day,
+                           cur_end = None,
+                           offset_in_period = None):
+
+    stocks_in_board = ''
+    for period_k, period_v in periods.items():
+        p_dir = os.path.join(stock_search_dir, period_k)
+        if not os.path.exists(p_dir):
+            print("The stock search results directory, %s, not exist." % p_dir)
+            continue
+
+        for strategy in strategies:
+            p_s_dir = os.path.join(p_dir, strategy)
+            if not os.path.exists(p_s_dir):
+                print("The stock search results directory, %s, not exist." % p_s_dir)
+                continue
+            date_list = os.listdir(p_s_dir)
+            for date in date_list:
+                if start_day <= date <= end_day:
+                    p_s_d_dir = os.path.join(p_s_dir, date)
+                    csv_list = os.listdir(p_s_d_dir)
+                    if len(csv_list):
+                        for csv in csv_list:
+                            csv_path = os.path.join(p_s_d_dir, csv)
+                            with open(csv_path, 'r') as csv_file:
+                                stocks = csv_file.readlines()
+                                stocks = stocks[1:]
+                                for stock in stocks:
+                                    stock_exchange = stock.split(',')[1].split('.')
+                                    if stock_exchange[1] == 'SH\n':
+                                        stocks_in_board += '' + stock_exchange[0]
+                                    elif stock_exchange[1] == 'SZ\n' or stock_exchange[1] == 'CYB\n':
+                                        stocks_in_board += '!' + stock_exchange[0]
+
+    if not os.path.exists(ths_dir):
+        print("The tdx directory, %s, not exist." % ths_dir)
+        exit(1)
+
+    input_path = os.path.join(ths_dir, 'input.sel')
+    if not os.path.exists(input_path):
+        return
+    else:
+        input_file = open(input_path, 'r+')
+        input_file.truncate(2)
+        input_file.seek(2)
+        input_file.write(stocks_in_board)
+        input_file.close()
+
 def get_cur_weekend_and_offset(current_day, week_dir):
     year = current_day.year
     if not os.path.exists(week_dir):
@@ -266,14 +319,31 @@ def daily_import_stocks_into_ths(week_dir,
                            str(weekend),
                            offset)
 
+def daily_import_stocks_into_ths_v2(week_dir,
+                                 ths_dir,
+                                 stock_search_dir,
+                                 periods,
+                                 strategies):
+    current_day = datetime.date.today()
+    last_day = current_day - datetime.timedelta(days=1)
+    weekend, offset = get_cur_weekend_and_offset(last_day, week_dir)
+    uipath = unicode(ths_dir, "utf8")
+    import_stocks_into_ths_v2(uipath,
+                           stock_search_dir,
+                           periods,
+                           strategies,
+                           str(last_day),
+                           str(weekend),
+                           str(weekend),
+                           offset)
 
 '''
 import_stocks_into_tdx('D:\\new_qlzq_v6\T0002\\blocknew',
                        'D:\dan\stock\py_stock\quantdigger\candicates',
                        {'1DAY': '1D',},
-                       ['MACD_MA8', ],
-                       '2017-01-03',
-                       '2017-08-07'
+                       ['ZT62808DKLINE_MACD1_MA60', ],#['ZT62808DKLINE_MACD4', 'ZT62808DKLINE_MACD7'],#['MACD_MA7', 'MACD_MA8', 'MACD_MA9'],
+                       '2018-01-26',
+                       '2018-01-26'
                        )
 
 
@@ -282,23 +352,37 @@ remove_stocks_from_tdx('D:\\new_qlzq_v6\T0002\\blocknew',
                        ['ZT62808DKLINE_MACD4',])
 
 
-
-daily_import_stocks_into_tdx('D:\dan\stock\py_stock\calendar\\2017_week.json',
+'''
+daily_import_stocks_into_tdx('D:\dan\stock\py_stock\calendar\\2018_week.json',
                              'D:\\new_qlzq_v6\T0002\\blocknew',
                              'D:\dan\stock\py_stock\quantdigger\candicates',
                              {'1DAY': '1D',},
-                             ['MACD_MA7', 'MACD_MA8', 'MACD_MA9']#['ZT62808DKLINE_MACD4','ZT62808DKLINE_MACD7'] #['MACD_MA7', 'MACD_MA8'],
+                             ['MA60_MA20',
+                              'ZT62808DKLINE_MACD1_MA60',
+                              'ZT62808DKLINE_MACD7_MA60',
+                              'MACD_MA7',
+                              'MACD_MA8',
+                              'MACD_MA9',
+                              'MACD_MA7A',
+                              'MACD_MA8A',
+                              'MACD_MA9A']#['ZT62808DKLINE_MACD4','ZT62808DKLINE_MACD7'] #['MACD_MA7', 'MACD_MA8'],
                              )
 
 '''
-daily_import_stocks_into_ths('D:\dan\stock\py_stock\calendar\\2017_week.json',
+daily_import_stocks_into_ths('D:\dan\stock\py_stock\calendar\\2018_week.json',
                              'C:\\同花顺软件\\同花顺\\mx_297788656',
                              'D:\dan\stock\py_stock\quantdigger\candicates',
                              {'1DAY': '1D',},
-                             ['MACD_MA7', 'MACD_MA8', 'MACD_MA9']#['ZT62808DKLINE_MACD4','ZT62808DKLINE_MACD7'] #['MACD_MA7', 'MACD_MA8'],
+                             ['MA60_MA20',
+                              'ZT62808DKLINE_MACD1_MA60',
+                              'ZT62808DKLINE_MACD7_MA60',
+                              'MACD_MA7',
+                              'MACD_MA7A',
+                              'MACD_MA8',
+                              'MACD_MA8A',
+                              'MACD_MA9',
+                              'MACD_MA9A']#['ZT62808DKLINE_MACD4','ZT62808DKLINE_MACD7'] #['MACD_MA7', 'MACD_MA8'],
                              )
-
-
-
+'''
 
 

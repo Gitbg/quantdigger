@@ -16,7 +16,7 @@ with open(stock_num_dir) as json_file:
 
 x_list = []
 y_list = []
-dk_sh = ts.get_k_data('sh', start="2008-01-01", end="2017-05-17")
+dk_sh = ts.get_k_data('sh', start="2015-11-01", end="2017-05-26")
 date_list = list(dk_sh.date)
 for i in range(len(dk_sh)):
     buy_dir = os.path.join(ft62876_buy_dir, str(date_list[i]), 'SH.csv')

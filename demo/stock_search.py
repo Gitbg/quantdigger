@@ -13,6 +13,7 @@ from quantdigger.technicals import qMA, qFT62876XY, qZT62808, qMACD,qZT62808_VAR
 class StockSearch(Strategy):
     def __init__(self, name):
         super(StockSearch, self).__init__(name)
+        self.all_candicates = []
         self.candicates = []
         self.to_sell = []
 
@@ -98,6 +99,104 @@ class MACD_ONLY0(StockSearch):
             and ctx.ma10 <= ctx.ma5):
             self.candicates.append(ctx.symbol)
 
+
+class MACD_GOLDEN_CROSS(StockSearch):
+    def __init__(self, name):
+        super(MACD_GOLDEN_CROSS, self).__init__(name)
+
+    def on_init(self, ctx):
+        ctx.macd = qMACD(ctx._cur_data_context.raw_data.close, 12, 26, 9)
+
+    def on_symbol(self, ctx):
+        if(ctx.macd['diff'][1] <= ctx.macd['dea'][1]
+           and ctx.macd['diff'] >= ctx.macd['dea']):
+            self.candicates.append(ctx.symbol)
+
+
+class MACD_MA_UNDER_WATER0(StockSearch):
+    def __init__(self, name):
+        super(MACD_MA_UNDER_WATER0, self).__init__(name)
+
+    def on_init(self, ctx):
+        ctx.macd = qMACD(ctx._cur_data_context.raw_data.close, 12, 26, 9)
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+        ctx.ma10 = qMA(ctx._cur_data_context.raw_data.close, 10, 'ma10', 'y', 2)
+        ctx.ma20 = qMA(ctx._cur_data_context.raw_data.close, 20, 'ma20', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] < 0
+            and ctx.macd['dea'] < 0
+            and ctx.macd['macd'] > 0
+            and (abs(ctx.macd['macd'][4] - ctx.macd['macd'][5]) < 0.10)
+            and (abs(ctx.macd['macd'][3] - ctx.macd['macd'][4]) < 0.10)
+            and (abs(ctx.macd['macd'][2] - ctx.macd['macd'][3]) < 0.10)
+            and (abs(ctx.macd['macd'][1] - ctx.macd['macd'][2]) < 0.10)
+            and (abs(ctx.macd['macd'] - ctx.macd['macd'][1]) < 0.10)
+            and ctx.ma10[1] <= ctx.ma10
+            and ctx.ma5[1] <= ctx.ma5
+            and ctx.ma5[1] <= ctx.ma10[1]
+            and ctx.ma10 <= ctx.ma5):
+                self.candicates.append(ctx.symbol)
+
+class MACD_MA_UNDER_WATER1(StockSearch):
+    def __init__(self, name):
+        super(MACD_MA_UNDER_WATER1, self).__init__(name)
+
+    def on_init(self, ctx):
+        ctx.macd = qMACD(ctx._cur_data_context.raw_data.close, 12, 26, 9)
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+        ctx.ma10 = qMA(ctx._cur_data_context.raw_data.close, 10, 'ma10', 'y', 2)
+        ctx.ma20 = qMA(ctx._cur_data_context.raw_data.close, 20, 'ma20', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] < 0
+            and ctx.macd['dea'] < 0
+            and ctx.macd['macd'] > 0
+            and ctx.macd['macd'][1] > 0
+            and ctx.macd['macd'][2] > 0
+            and ctx.macd['macd'][3] > 0
+            and ctx.macd['macd'][4] > 0
+            and ctx.macd['macd'][5] >= 0
+            and (abs(ctx.macd['macd'][4] - ctx.macd['macd'][5]) < 0.10)
+            and (abs(ctx.macd['macd'][3] - ctx.macd['macd'][4]) < 0.10)
+            and (abs(ctx.macd['macd'][2] - ctx.macd['macd'][3]) < 0.10)
+            and (abs(ctx.macd['macd'][1] - ctx.macd['macd'][2]) < 0.10)
+            and (abs(ctx.macd['macd'] - ctx.macd['macd'][1]) < 0.10)
+            and ctx.ma10[1] <= ctx.ma10
+            and ctx.ma5[1] <= ctx.ma5
+            and ctx.ma5[1] <= ctx.ma10[1]
+            and ctx.ma10 <= ctx.ma5):
+                self.candicates.append(ctx.symbol)
+
+class MACD_MA_UNDER_WATER2(StockSearch):
+    def __init__(self, name):
+        super(MACD_MA_UNDER_WATER2, self).__init__(name)
+
+    def on_init(self, ctx):
+        ctx.macd = qMACD(ctx._cur_data_context.raw_data.close, 12, 26, 9)
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+        ctx.ma10 = qMA(ctx._cur_data_context.raw_data.close, 10, 'ma10', 'y', 2)
+        ctx.ma20 = qMA(ctx._cur_data_context.raw_data.close, 20, 'ma20', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] < 0
+            and ctx.macd['dea'] < 0
+            and ctx.macd['macd'] > 0
+            and ctx.macd['macd'][1] > 0
+            and ctx.macd['macd'][2] > 0
+            and ctx.macd['macd'][3] > 0
+            and ctx.macd['macd'][4] > 0
+            and ctx.macd['macd'][5] >= 0
+            and (abs(ctx.macd['macd'][4] - ctx.macd['macd'][5]) < 0.10)
+            and (abs(ctx.macd['macd'][3] - ctx.macd['macd'][4]) < 0.10)
+            and (abs(ctx.macd['macd'][2] - ctx.macd['macd'][3]) < 0.10)
+            and (abs(ctx.macd['macd'][1] - ctx.macd['macd'][2]) < 0.10)
+            and (abs(ctx.macd['macd'] - ctx.macd['macd'][1]) < 0.10)
+            and ctx.ma5 >= ctx.ma5[1]
+            and ctx.close >= ctx.ma5
+            and ctx.close[1] <= ctx.ma5[1]):
+                self.candicates.append(ctx.symbol)
+
 class MACD_MA0(StockSearch):
     def __init__(self, name):
         super(MACD_MA0, self).__init__(name)
@@ -107,6 +206,10 @@ class MACD_MA0(StockSearch):
         ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
         ctx.ma10 = qMA(ctx._cur_data_context.raw_data.close, 10, 'ma10', 'y', 2)
         ctx.ma20 = qMA(ctx._cur_data_context.raw_data.close, 20, 'ma20', 'y', 2)
+        ctx.ma60 = qMA(ctx._cur_data_context.raw_data.close, 60, 'ma60', 'y', 2)
+        ctx.ma4 = qMA(ctx._cur_data_context.raw_data.close, 4, 'ma4', 'y', 2)
+        ctx.ma9 = qMA(ctx._cur_data_context.raw_data.close, 9, 'ma9', 'y', 2)
+        ctx.ma19 = qMA(ctx._cur_data_context.raw_data.close, 19, 'ma19', 'y', 2)
 
     def on_symbol(self, ctx):
         if (ctx.macd['diff'] > 0
@@ -233,9 +336,27 @@ class MACD_MA7(MACD_MA0):
             and ctx.ma10[2] > ctx.ma20[2]
             and ctx.ma10[2] <= ctx.ma10[1] <= ctx.ma10
             and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
             and (not (ctx.ma5 < ctx.ma10 and ctx.ma5 < ctx.ma5[1]))
             and ctx.low <= ctx.ma20
             and ctx.ma10 >= ctx.close >= ctx.ma20):
+                self.candicates.append(ctx.symbol)
+
+class MACD_MA7A(MACD_MA0):
+    def __init__(self, name):
+        super(MACD_MA7A, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (abs(ctx.macd['diff'] - ctx.macd['dea']) >= 0.1
+            and ctx.ma9 > ctx.ma19
+            and ctx.ma9[1] > ctx.ma19[1]
+            and ctx.ma9[2] > ctx.ma19[2]
+            and ctx.ma9[2] <= ctx.ma9[1] <= ctx.ma9
+            and ctx.ma19[2] <= ctx.ma19[1] <= ctx.ma19
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
+            and (not (ctx.ma4 < ctx.ma9 and ctx.ma4 < ctx.ma4[1]))
+            and ctx.low <= ctx.ma19
+            and ctx.ma9 >= ctx.close >= ctx.ma19):
                 self.candicates.append(ctx.symbol)
 
 class MACD_MA8(MACD_MA0):
@@ -249,9 +370,27 @@ class MACD_MA8(MACD_MA0):
             and ctx.ma10[2] > ctx.ma20[2]
             and ctx.ma10[2] <= ctx.ma10[1] <= ctx.ma10
             and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
             and (not (ctx.ma5 < ctx.ma10 and ctx.ma5 < ctx.ma5[1]))
             and ctx.low <= ctx.ma20
             and ctx.ma10 >= ctx.close >= ctx.ma20):
+                self.candicates.append(ctx.symbol)
+
+class MACD_MA8A(MACD_MA0):
+    def __init__(self, name):
+        super(MACD_MA8A, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (0.05 <= abs(ctx.macd['diff'] - ctx.macd['dea']) <= 0.09
+            and ctx.ma9 > ctx.ma19
+            and ctx.ma9[1] > ctx.ma19[1]
+            and ctx.ma9[2] > ctx.ma19[2]
+            and ctx.ma9[2] <= ctx.ma9[1] <= ctx.ma9
+            and ctx.ma19[2] <= ctx.ma19[1] <= ctx.ma19
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
+            and (not (ctx.ma4 < ctx.ma9 and ctx.ma4 < ctx.ma4[1]))
+            and ctx.low <= ctx.ma19
+            and ctx.ma9 >= ctx.close >= ctx.ma19):
                 self.candicates.append(ctx.symbol)
 
 class MACD_MA9(MACD_MA0):
@@ -265,9 +404,65 @@ class MACD_MA9(MACD_MA0):
             and ctx.ma10[2] > ctx.ma20[2]
             and ctx.ma10[2] <= ctx.ma10[1] <= ctx.ma10
             and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
             and (not (ctx.ma5 < ctx.ma10 and ctx.ma5 < ctx.ma5[1]))
             and ctx.low <= ctx.ma20
             and ctx.close >= ctx.ma5):
+                self.candicates.append(ctx.symbol)
+
+class MACD_MA9A(MACD_MA0):
+    def __init__(self, name):
+        super(MACD_MA9A, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (abs(ctx.macd['diff'] - ctx.macd['dea']) <= 0.04
+            and ctx.ma9 > ctx.ma19
+            and ctx.ma9[1] > ctx.ma19[1]
+            and ctx.ma9[2] > ctx.ma19[2]
+            and ctx.ma9[2] <= ctx.ma9[1] <= ctx.ma9
+            and ctx.ma19[2] <= ctx.ma19[1] <= ctx.ma19
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
+            and (not (ctx.ma4 < ctx.ma9 and ctx.ma4 < ctx.ma4[1]))
+            and ctx.low <= ctx.ma19
+            and ctx.close >= ctx.ma4):
+                self.candicates.append(ctx.symbol)
+                self.all_candicates.append(ctx.symbol)
+        if ctx.ma4 <= ctx.ma4[1]:
+            if ctx.symbol in self.all_candicates:
+                self.to_sell.append(ctx.symbol)
+                self.all_candicates.remove(ctx.symbol)
+
+class MACD_MA9B(MACD_MA0):
+    def __init__(self, name):
+        super(MACD_MA9B, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (abs(ctx.macd['diff'] - ctx.macd['dea']) <= 0.04
+            and ctx.ma10 > ctx.ma20
+            and ctx.ma10[1] > ctx.ma20[1]
+            and ctx.ma10[2] > ctx.ma20[2]
+            and ctx.ma10[2] <= ctx.ma10[1] <= ctx.ma10
+            and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
+            and (not (ctx.ma5 < ctx.ma10 and ctx.ma5 < ctx.ma5[1]))
+            and ctx.ma20 <= ctx.low <= ctx.ma10
+            and ctx.close >= ctx.ma5):
+                self.candicates.append(ctx.symbol)
+
+class MACD_MA11(MACD_MA0):
+    def __init__(self, name):
+        super(MACD_MA11, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (abs(ctx.macd['diff'] - ctx.macd['dea']) <= 0.04
+            and ctx.ma10 > ctx.ma20
+            and ctx.ma10[1] > ctx.ma20[1]
+            and ctx.ma10[2] > ctx.ma20[2]
+            and ctx.ma10[2] <= ctx.ma10[1] <= ctx.ma10
+            and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
+            and (not (ctx.ma5 < ctx.ma10 and ctx.ma5 < ctx.ma5[1]))
+            and ctx.low <= ctx.ma10
+            and ctx.ma5 >= ctx.close >= ctx.ma10):
                 self.candicates.append(ctx.symbol)
 
 class MACD_MA10(MACD_MA0):
@@ -283,6 +478,20 @@ class MACD_MA10(MACD_MA0):
             and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
             and ctx.low <= ctx.ma20
             and ctx.close >= ctx.ma5):
+                self.candicates.append(ctx.symbol)
+
+
+class MA60_MA20(MACD_MA0):
+    def __init__(self, name):
+        super(MA60_MA20, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.ma20 >= ctx.ma60
+            and ctx.ma20[1] >= ctx.ma60[1]
+            and ctx.ma20[2] >= ctx.ma60[2]
+            and ctx.ma20[2] <= ctx.ma20[1] <= ctx.ma20
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
+            and ctx.low <= ctx.ma60 <= ctx.high):
                 self.candicates.append(ctx.symbol)
 
 class ZT62808DKLINE_MACD(StockSearch):
@@ -443,6 +652,51 @@ class ZT62808DKLINE_MACD9(ZT62808DKLINE_MACD):
             and ctx.close >= ctx.zt62808dkline):
                 self.candicates.append(ctx.symbol)
 
+# MACD点水0.03，macd大于0，或macd小于0且macd缩短， 上穿多空线，收盘价大于开盘价，量增，60日均线上翘
+class ZT62808DKLINE_MACD7_MA60(StockSearch):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD7_MA60, self).__init__(name)
+
+    def on_init(self, ctx):
+        ctx.zt62808dkline = qZT62808(ctx._cur_data_context.raw_data)
+        ctx.macd = qMACD(ctx._cur_data_context.raw_data.close, 12, 26, 9)
+        ctx.ma60 = qMA(ctx._cur_data_context.raw_data.close, 60, 'ma60', 'y', 2)
+        ctx.ma5 = qMA(ctx._cur_data_context.raw_data.close, 5, 'ma5', 'y', 2)
+
+    def on_symbol(self, ctx):
+        if ((abs(ctx.macd['diff'] - ctx.macd['dea']) < 0.03)
+            and ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.ma5 > ctx.zt62808dkline
+            and ctx.close > ctx.open
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
+            and ctx.close >= ctx.ma60
+            and ctx.volume > ctx.volume[1]):
+                if(ctx.macd['macd'] >= 0
+                   or (ctx.macd['macd'] < 0
+                       and ctx.macd['macd'] > ctx.macd['macd'][1])):
+                        self.candicates.append(ctx.symbol)
+
+# MACD两项大于0，点水0.03，上穿多空线，收盘价小于等于开盘价，量减
+class ZT62808DKLINE_MACD1_MA60(ZT62808DKLINE_MACD7_MA60):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD1_MA60, self).__init__(name)
+
+    def on_symbol(self, ctx):
+        if (ctx.macd['diff'] > 0
+            and ctx.macd['dea'] > 0
+            and (abs(ctx.macd['diff'] - ctx.macd['dea']) < 0.03)
+            and ctx.low <= ctx.zt62808dkline
+            and ctx.high >= ctx.zt62808dkline
+            and ctx.ma5 > ctx.zt62808dkline
+            and ctx.close <= ctx.open
+            and ctx.ma60[2] <= ctx.ma60[1] <= ctx.ma60
+            and ctx.close >= ctx.ma60
+            and ctx.volume < ctx.volume[1]):
+                self.candicates.append(ctx.symbol)
+
 class ZT62808DKLINE_MA0(StockSearch):
     def __init__(self, name):
         super(ZT62808DKLINE_MA0, self).__init__(name)
@@ -537,6 +791,26 @@ class ZT62808DKLINE_VAR19_VR_MTM_MACD(StockSearch):
                or (ctx.mtm['mtm'] >= ctx.mtm['mtmma'] and ctx.zt62808var19)):
                 self.candicates.append(ctx.symbol)
 
+class ZT62808DKLINE_MACD_DEVIATION(StockSearch):
+    def __init__(self, name):
+        super(ZT62808DKLINE_MACD_DEVIATION, self).__init__(name)
+
+    def on_init(self, ctx):
+        ctx.zt62808dkline = qZT62808(ctx._cur_data_context.raw_data)
+        ctx.macd = qMACD(ctx._cur_data_context.raw_data.close, 12, 26, 9)
+
+    def on_symbol(self, ctx):
+        if(ctx.zt62808dkline < ctx.zt62808dkline[1]
+            and ctx.zt62808dkline[1] < ctx.zt62808dkline[2]
+            and ctx.zt62808dkline[2] < ctx.zt62808dkline[3]
+            and ctx.zt62808dkline[3] < ctx.zt62808dkline[4]
+            and ctx.zt62808dkline[4] < ctx.zt62808dkline[5]
+            and ctx.zt62808dkline[5] < ctx.zt62808dkline[6]
+            and ctx.macd['macd'] > 0
+            and ctx.macd['macd'][1] > 0
+            and ctx.macd['macd'][2] > 0):
+            self.candicates.append(ctx.symbol)
+
 if __name__ == '__main__':
     #
     import timeit
@@ -545,18 +819,22 @@ if __name__ == '__main__':
     ConfigUtil.set(data_path='D:\dan\stock\\tushare_csv\k_data\qfq')
     #set_symbols(['*.SH'])
     #set_symbols(['*.SZ'])
-    set_symbols(pcontracts = ['*.SH-1.DAY', '*.SZ-1.DAY', '*.CYB-1.DAY'], dt_start = "2016-01-01", dt_end = "2017-08-11")
+    set_symbols(pcontracts = ['*.SH-1.DAY', '*.SZ-1.DAY', '*.CYB-1.DAY'], dt_start = "2018-02-18", dt_end = "2018-12-21")
+    #set_symbols(pcontracts=['*.CYB-1.DAY', ], dt_start="2017-10-18", dt_end="2018-05-11")
+    #set_symbols(pcontracts=['*.SH-1.DAY', ], dt_start="2016-09-01", dt_end="2017-11-17")
+    #set_symbols(pcontracts=['*.SH-15.MINUTE', '*.SZ-1.MINUTE', '*.CYB-1.MINUTE'], dt_start="2017-07-07", dt_end="2017-08-18")
+    #set_symbols(pcontracts=['*.SH-15.MINUTE', '*.SZ-15.MINUTE', '*.CYB-15.MINUTE'], dt_start="2017-07-07", dt_end="2017-08-19")
     #set_symbols(pcontracts=['*.SZ-1.DAY'], dt_start="2017-02-20", dt_end="2017-06-14")
     #set_symbols(pcontracts=['*.CYB-1.DAY'], dt_start="2017-02-20", dt_end="2017-06-14")
     #set_symbols(pcontracts=['*.SH-1.WEEK', '*.SZ-1.WEEK', '*.CYB-1.WEEK'], dt_start="2015-01-01", dt_end="2017-06-23")
     #algo = MA10MA20('A1')
     #algo = FT62876XY('62876XY')
     #algo = ZT62808DKLINE_MACD('ZT62808DKLINE_MACD')
-    algo = ZT62808DKLINE_VAR19_VR_MTM_MACD('ZT62808DKLINE_VAR19_VR_MTM_MACD')
+    '''algo = ZT62808DKLINE_VAR19_VR_MTM_MACD('ZT62808DKLINE_VAR19_VR_MTM_MACD')
     algo0 = ZT62808DKLINE_MACD0('ZT62808DKLINE_MACD0')
     algo1 = ZT62808DKLINE_MACD1('ZT62808DKLINE_MACD1')
     algo2 = ZT62808DKLINE_MACD2('ZT62808DKLINE_MACD2')
-    algo3 = ZT62808DKLINE_MACD1('ZT62808DKLINE_MACD3')
+    algo3 = ZT62808DKLINE_MACD3('ZT62808DKLINE_MACD3')
     algo4 = ZT62808DKLINE_MACD4('ZT62808DKLINE_MACD4')
     algo6 = ZT62808DKLINE_MACD6('ZT62808DKLINE_MACD6')
     algo7 = ZT62808DKLINE_MACD7('ZT62808DKLINE_MACD7')
@@ -568,25 +846,49 @@ if __name__ == '__main__':
     algo13 = MACD_MA3('MACD_MA3')
     algo14 = MACD_MA4('MACD_MA4')
     algo15 = MACD_MA5('MACD_MA5')
-    algo16 = MACD_MA6('MACD_MA6')
+    algo16 = MACD_MA6('MACD_MA6')'''
+
     algo17 = MACD_MA7('MACD_MA7')
     algo18 = MACD_MA8('MACD_MA8')
     algo19 = MACD_MA9('MACD_MA9')
     algo1a = MACD_MA10('MACD_MA10')
+    algo1b = MACD_MA11('MACD_MA11')
+    algo1c = MACD_MA9B('MACD_MA9B')
+    algo17a = MACD_MA7A('MACD_MA7A')
+    algo18a = MACD_MA8A('MACD_MA8A')
+    algo19a = MACD_MA9A('MACD_MA9A')
+
     algo20 = MACD_ONLY0('MACD_ONLY0')
+    algo21 = MACD_MA_UNDER_WATER0('MACD_MA_UNDER_WATER0')
+    algo22 = MACD_MA_UNDER_WATER1('MACD_MA_UNDER_WATER1')
+    algo23 = MACD_MA_UNDER_WATER2('MACD_MA_UNDER_WATER2')
+    algo30 = MACD_GOLDEN_CROSS('MACD_GOLDEN_CROSS')
 
+    algo31 = ZT62808DKLINE_MACD7_MA60('ZT62808DKLINE_MACD7_MA60')
+    algo32 = ZT62808DKLINE_MACD1_MA60('ZT62808DKLINE_MACD1_MA60')
 
-    algoma0 = ZT62808DKLINE_MA0('ZT62808DKLINE_MA0')
-    algoma1 = ZT62808DKLINE_MA1('ZT62808DKLINE_MA1')
-    algoma2 = ZT62808DKLINE_MA2('ZT62808DKLINE_MA2')
-    algoma3 = ZT62808DKLINE_MA3('ZT62808DKLINE_MA3')
+    algo33 = MA60_MA20('MA60_MA20')
+
+    #algo40 = ZT62808DKLINE_MACD_DEVIATION('ZT62808DKLINE_MACD_DEVIATION')
+
+    #algoma0 = ZT62808DKLINE_MA0('ZT62808DKLINE_MA0')
+    #algoma1 = ZT62808DKLINE_MA1('ZT62808DKLINE_MA1')
+    #algoma2 = ZT62808DKLINE_MA2('ZT62808DKLINE_MA2')
+    #algoma3 = ZT62808DKLINE_MA3('ZT62808DKLINE_MA3')
     #profile = add_strategy([algo4, algo7], { 'capital': 500000000.0 })
+    #profile = add_strategy([algo33,], {'capital': 500000000.0})
+    #profile = add_strategy([algo32, ], {'capital': 500000000.0})
     #profile = add_strategy([algo10, algo11, algo12, algo13, algo15, algo16], {'capital': 500000000.0})
-    profile = add_strategy([algo17, algo18, algo19, algo20], {'capital': 500000000.0})
-    #profile = add_strategy([algo20], {'capital': 500000000.0})
+    #profile = add_strategy([algo17, algo18, algo19, algo1c], {'capital': 500000000.0})
+    profile = add_strategy([algo33, algo32, algo31, algo17, algo18, algo19, algo17a, algo18a, algo19a], {'capital': 500000000.0})
+    #profile = add_strategy([algo19a], {'capital': 500000000.0})
+    #profile = add_strategy([algo30], {'capital': 500000000.0})
+    #profile = add_strategy([algo23], {'capital': 500000000.0})
     #profile = add_strategy([algoma1, algoma2, algoma3], {'capital': 500000000.0})
+    #profile = add_strategy([algo40, ], {'capital': 500000000.0})
 
     run()
+
 
     stop = timeit.default_timer()
     print('Used time is %d seconds' % (stop - start))

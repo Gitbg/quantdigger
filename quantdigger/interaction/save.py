@@ -6,7 +6,11 @@ def save_candicates(root_path, strategy, date, pcontract, candicates):
     contract, period = tuple(strpcon.split('-'))
     code, exch = tuple(contract.split('.'))
     period = period.replace('.', '')
-    dir = os.path.join(root_path, period, strategy, date._date_repr)
+    if period == '15MINUTE' or period == '60MINUTE':
+        time = date._date_repr + '-' + date._time_repr.replace(':', '-')
+    else:
+        time = date._date_repr
+    dir = os.path.join(root_path, period, strategy, time)
     if(os.path.exists(dir) != True):
         os.makedirs(dir)
     fname = os.path.join(dir, exch + ".csv")
