@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 ##
 # @file data_context.py
-# @brief 
+# @brief
 # @author wondereamer
 # @version 0.1
 # @date 2016-11-27
 
 import copy
-import Queue
+import six
+from six.moves import queue
 from quantdigger.engine.blotter import SimpleBlotter
 from quantdigger.engine.exchange import Exchange
 from quantdigger.event import Event, EventsPool, SignalEvent, OnceEvent
@@ -17,6 +18,7 @@ from quantdigger.datastruct import (
     Direction,
     PositionKey,
 )
+
 
 class StrategyContext(object):
     """ 策略组合
@@ -62,7 +64,7 @@ class StrategyContext(object):
             # 事件处理。
             try:
                 event = self.events_pool.get()
-            except Queue.Empty:
+            except queue.Empty:
                 assert(False)
             except IndexError:
                 break
@@ -84,7 +86,6 @@ class StrategyContext(object):
             if event.route == Event.ONCE or event.route == Event.ORDER:
                 self.exchange.make_market(self.blotter._bars, at_baropen)
         self.blotter.update_status(self._datetime, at_baropen)
-
 
     def plot_line(self, name, ith_window, x, y, styles, lw=1, ms=10, twinx=False):
         """ 绘制曲线
@@ -192,7 +193,7 @@ class StrategyContext(object):
         return self.blotter.open_orders
 
     def all_positions(self):
-        return self.blotter.positions.values()
+        return list(six.itervalues(self.blotter.positions))
 
     def position(self, contract, direction):
         try:

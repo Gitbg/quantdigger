@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+import six
 import copy
 from abc import ABCMeta, abstractmethod
 
-from quantdigger.util import elogger as logger
+from quantdigger.util import gen_log as logger
 from quantdigger.errors import TradingError
 from quantdigger.engine.api import SimulateTraderAPI
 from quantdigger.event import Event
@@ -15,8 +16,6 @@ from quantdigger.datastruct import (
     TradeSide,
     Transaction,
 )
-
-
 
 
 class Blotter(object):
@@ -83,7 +82,6 @@ class SimpleBlotter(Blotter):
     def update_datetime(self, dt):
         """ 在新的价格数据来的时候触发。 """
         if self._datetime is None:
-            self._datetime = dt
             self._start_date = dt
             self._init_state()
         elif self._datetime.date() != dt.date():
@@ -93,7 +91,7 @@ class SimpleBlotter(Blotter):
                         order.contract, order.direction)]
                     pos.closable += order.quantity
             self.open_orders.clear()
-            for key, pos in self.positions.iteritems():
+            for key, pos in six.iteritems(self.positions):
                 pos.closable += pos.today
                 pos.today = 0
         self._datetime = dt
@@ -105,14 +103,17 @@ class SimpleBlotter(Blotter):
         dh = {}
         dh['datetime'] = dt
         dh['commission'] = self.holding['commission']
-        pos_profit = 0
-        margin = 0
-        order_margin = 0
+        pos_profit = 0.0
+        margin = 0.0
+        order_margin = 0.0
         # 计算当前持仓历史盈亏。
         # 以close价格替代市场价格。
-        for key, pos in self.positions.iteritems():
+        for key, pos in six.iteritems(self.positions):
             bar = self._bars[key.contract]
-            new_price = bar.open if at_baropen else bar.close
+            if not at_baropen or bar.datetime < dt:
+                new_price = bar.close
+            else:
+                new_price = bar.open
             pos_profit += pos.profit(new_price)
             # @TODO 用昨日结算价计算保证金
             margin += pos.position_margin(new_price)
@@ -120,7 +121,8 @@ class SimpleBlotter(Blotter):
         for order in self.open_orders:
             assert(order.price_type == PriceType.LMT)
             bar = self._bars[order.contract]
-            new_price = bar.open if at_baropen else bar.close
+            #new_price = bar.open if at_baropen else bar.close
+            new_price = order.price
             if order.side == TradeSide.KAI:
                 order_margin += order.order_margin(new_price)
         # 当前权益 = 初始资金 + 累积平仓盈亏 + 当前持仓盈亏 - 历史佣金总额
@@ -133,7 +135,7 @@ class SimpleBlotter(Blotter):
         # 强平功能，使交易继续下去。
         dh['cash'] = dh['equity'] - margin - order_margin
         if dh['cash'] < 0:
-            for key in self.positions.iterkeys():
+            for key in six.iterkeys(self.positions):
                 if not key.contract.is_stock:
                     # @NOTE  只要有一个是期货，在资金不足的时候就得追加保证金
                     raise Exception('需要追加保证金!')
@@ -162,7 +164,7 @@ class SimpleBlotter(Blotter):
                         order.order_margin(self._bars[order.contract].open)
             else:
                 logger.warn(errmsg)
-                # print len(event.orders), len(new_orders)
+                # six.print_(len(event.orders), len(new_orders))
                 continue
         self.open_orders.update(new_orders)  # 改变对象的值，不改变对象地址。
         self._all_orders.extend(new_orders)
@@ -247,7 +249,7 @@ class SimpleBlotter(Blotter):
         elif order.side == TradeSide.KAI:
             new_price = self._bars[order.contract].open
             if self.holding['cash'] < order.order_margin(new_price):
-                # print self.holding['cash'], new_price * order.quantity
+                # six.print_(self.holding['cash'], new_price * order.quantity)
                 return '没有足够的资金开仓'
         return ''
 
@@ -258,7 +260,7 @@ class SimpleBlotter(Blotter):
             price_type = self._all_transactions[-1].price_type
         else:
             price_type = PriceType.LMT
-        for pos in self.positions.values():
+        for pos in six.itervalues(self.positions):
             order = Order(
                 self._datetime,
                 pos.contract,
@@ -269,11 +271,12 @@ class SimpleBlotter(Blotter):
                 pos.quantity
             )
             force_trans.append(Transaction(order))
+
         for trans in force_trans:
             self._update_holding(trans)
             self._update_positions(trans)
-        if force_trans:
-            self.update_status(trans.datetime, False)
+
+        self.update_status(self._datetime, False)
         self.positions = {}
         return
 

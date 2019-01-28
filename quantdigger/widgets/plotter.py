@@ -6,6 +6,7 @@
 # @version 0.15
 # @date 2015-06-13
 
+import six
 import inspect
 from matplotlib.axes import Axes
 import numpy as np
@@ -29,7 +30,7 @@ def plot_init(method):
         #
         default.update(method_args)
         # 属性创建
-        for key, value in default.iteritems():
+        for key, value in six.iteritems(default):
             setattr(self, key, value)
         # 运行构造函数
         rst = method(self, *args, **kwargs)
@@ -40,15 +41,15 @@ def plot_init(method):
 import bisect
 def sub_interval(start, end, array):
     """ 寻找满足区间[start, end]的array值
-    
+
     Args:
         start (int): 区间左侧
         end (int): 区间右侧
         array (list): 有序数组
-    
+
     >>> array = [0,1,3, 4, 5, 6, 8]
     >>> rst = sub_interval(2, 5, array)
-    >>> print array[rst[0]: rst[1]]
+    >>> six.print_(array[rst[0]: rst[1]])
     """
     i = bisect.bisect_left(array, start)
     if i != len(array):
@@ -106,7 +107,7 @@ class Plotter(object):
 
     def plot_line(self, *args, **kwargs):
         """ 画线
-    
+
         Args:
             *args (tuple): [_xdata], ydata, style
             **kwargs (dict): lw, ms
@@ -116,7 +117,7 @@ class Plotter(object):
         ms = kwargs.get('ms', 10)
         if len(args[0]) > 0:
             if len(args) == 2:
-                ydata = args[0] 
+                ydata = args[0]
                 style = args[1]
                 # 区分绘图容器。
                 if isinstance(self.widget, Axes):
@@ -124,8 +125,8 @@ class Plotter(object):
                 else:
                     self.qt_widget.plot_line(self.widget, ydata, style, lw, ms)
             elif len(args) == 3:
-                _xdata = args[0] 
-                ydata = args[1] 
+                _xdata = args[0]
+                ydata = args[1]
                 style = args[2]
                 # 区分绘图容器。
                 if isinstance(self.widget, Axes):
@@ -170,7 +171,7 @@ class Plotter(object):
             self._upper = self._lower = []
             if isinstance(self.values, dict):
                 # 多值指标
-                values = zip(*self.values.itervalues())
+                values = zip(*six.itervalues(self.values))
                 self._upper = [max(value) for value in values]
                 self._lower = [min(value) for value in values]
             else:
@@ -182,5 +183,6 @@ class Plotter(object):
                 temp = zip(self._xdata, self.values)
                 sdata = sorted(temp, key=lambda x: x[0])
                 temp = zip(*sdata)
-                self._xdata = list(temp[0])
-                self.values = list(temp[1])
+                l_temp = list(temp)
+                self._xdata = l_temp[0]
+                self.values = l_temp[1]

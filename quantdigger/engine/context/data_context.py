@@ -1,24 +1,17 @@
 # -*- coding: utf-8 -*-
-##
-# @file data_context.py
-# @brief 
-# @author wondereamer
-# @version 0.1
-# @date 2016-11-27
 
 import datetime
+import six
 
 from quantdigger.engine.series import SeriesBase, NumberSeries, DateTimeSeries
 from quantdigger.technicals.base import TechnicalBase
 from quantdigger.util import elogger as logger
+from quantdigger.datastruct import Bar
 
-from quantdigger.datastruct import (
-    Bar
-)
 
 class DataContext(object):
     """ A DataContext expose data should be visited by multiple strategie.
-    which including bars of specific PContract, technicals and series of  
+    which including bars of specific PContract, technicals and series of
     strategie.
     """
     def __init__(self, Helper):
@@ -93,7 +86,7 @@ class DataContext(object):
         else:
             for tec in technicals:
                 if tec.is_multiple:
-                    for s in tec.series.values():
+                    for s in six.itervalues(tec.series):
                         s.update_curbar(self._curbar)
                 else:
                     for s in tec.series:
@@ -110,7 +103,6 @@ class DataContext(object):
             logger.error('合约[%s] 数据时间逆序或冗余' % self.pcontract)
             raise
         return True, self.new_row
-
 
     def __len__(self):
         return len(self._Helper)

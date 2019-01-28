@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
-##
-# @file mplots.py
-# @brief 绘制k线，交易信号连线。
-# @author wondereamer
-# @version 2.0
-# @date 2015-10-19
 
-
+import six
+from six.moves import range
 import numpy as np
 import inspect
 from matplotlib.colors import colorConverter
@@ -29,9 +24,9 @@ def override_attributes(method):
         try:
             for attr in arg_names:
                 obj_attrs[attr] = getattr(self, attr)
-        except Exception, e:
-            print(e)
-            print("构造函数和绘图函数的绘图属性参数不匹配。")
+        except Exception as e:
+            six.print_(e)
+            six.print_("构造函数和绘图函数的绘图属性参数不匹配。")
         obj_attrs.update(method_args)
         return method(self, widget, **obj_attrs)
     return wrapper
@@ -74,7 +69,7 @@ class Candles(object):
     # note this code assumes if any value open, close, low, high is
     # missing they all are missing
     @override_attributes
-    def plot(self, widget, data, width=0.6, 
+    def plot(self, widget, data, width=0.6,
              colorup='r', colordown='g', lc='k', alpha=1):
 
         if self.lineCollection:
@@ -85,20 +80,19 @@ class Candles(object):
         self.set_yrange(data.low.values, data.high.values)
         self.data = data
         """docstring for plot"""
-        delta = self.width/2.
-        barVerts = [((i-delta, open),
-                     (i-delta, close),
-                     (i+delta, close),
-                     (i+delta, open))
-                    for i, open, close in zip(xrange(len(self.data)),
+        delta = self.width / 2.
+        barVerts = [((i - delta, open),
+                     (i - delta, close),
+                     (i + delta, close),
+                     (i + delta, open))
+                    for i, open, close in zip(range(len(self.data)),
                                               self.data.open,
                                               self.data.close)
                     if open != -1 and close != -1]
         rangeSegments = [((i, low), (i, high))
-                         for i, low, high in zip(
-                                 xrange(len(self.data)),
-                                 self.data.low,
-                                 self.data.high)
+                         for i, low, high in zip(range(len(self.data)),
+                                                 self.data.low,
+                                                 self.data.high)
                          if low != -1]
         r, g, b = colorConverter.to_rgb(self.colorup)
         colorup = r, g, b, self.alpha
@@ -117,31 +111,22 @@ class Candles(object):
         r, g, b = colorConverter.to_rgb(self.lc)
         linecolor = r, g, b, self.alpha
         self.lineCollection = LineCollection(rangeSegments,
-                                        colors=(linecolor,),
-                                        linewidths=lw,
-                                        antialiaseds=useAA,
-                                        zorder=0)
+                                             colors=(linecolor,),
+                                             linewidths=lw,
+                                             antialiaseds=useAA,
+                                             zorder=0)
 
         self.barCollection = PolyCollection(barVerts,
-                                       facecolors=colors,
-                                       edgecolors=colors,
-                                       antialiaseds=useAA,
-                                       linewidths=lw,
-                                       zorder=1)
-        #minx, maxx = 0, len(rangeSegments)
-        #miny = min([low for low in self.data.low if low !=-1])
-        #maxy = max([high for high in self.data.high if high != -1])
-        #corners = (minx, miny), (maxx, maxy)
-        #ax.update_datalim(corners)
+                                            facecolors=colors,
+                                            edgecolors=colors,
+                                            antialiaseds=useAA,
+                                            linewidths=lw,
+                                            zorder=1)
         widget.autoscale_view()
         # add these last
         widget.add_collection(self.barCollection)
         widget.add_collection(self.lineCollection)
-
-        #ax.plot(self.data.close, color = 'y')
-        #lineCollection, barCollection = None, None
         return self.lineCollection, self.barCollection
-
 
     def set_yrange(self, lower, upper=[]):
         self.upper = upper if len(upper) > 0 else lower
@@ -158,10 +143,6 @@ class Candles(object):
 class TradingSignal(object):
     """ 从信号坐标(时间， 价格)中绘制交易信号。 """
     def __init__(self, signal, name="Signal", c=None, lw=2):
-        #self.set_yrange(price)
-        #self.signal=signal
-        #self.c = c
-        #self.lw = lw
         self.signal = signal
         self.name = name
 
@@ -180,7 +161,7 @@ class TradingSignalPos(object):
     def __init__(self, price_data, deals, name="Signal", c=None, lw=2):
         self.signal = []
         self.colors = []
-        price_data['row'] = [i for i in xrange(0, len(price_data))]
+        price_data['row'] = [i for i in range(0, len(price_data))]
         for deal in deals:
             # ((x0, y0), (x1, y1))
             p = ((price_data.row[deal.open_datetime], deal.open_price),

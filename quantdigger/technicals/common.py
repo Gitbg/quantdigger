@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
-##
-# @file common.py
-# @brief
-# @author wondereamer
-# @version 0.1
-# @date 2015-12-23
-import talib
-import matplotlib.finance as finance
 
-from quantdigger.technicals.base import \
-    TechnicalBase, ndarray, tech_init
+import talib
+
+from quantdigger.technicals.base import (
+    TechnicalBase,
+    ndarray,
+    tech_init
+)
 from quantdigger.technicals.techutil import register_tech
 from quantdigger.widgets.plotter import Plotter, plot_init
 
@@ -150,7 +147,7 @@ class BOLL(TechnicalBase):
         #emaslow = MA(x, nslow, type='exponential').value
         #emafast = MA(x, nfast, type='exponential').value
         #return emaslow, emafast, emafast - emaslow
-        
+
     #def plot(self, widget):
         #self.widget = widget
         #fillcolor = 'darkslategrey'
@@ -174,6 +171,7 @@ class Volume(Plotter):
         self.values = ndarray(volume)
 
     def plot(self, widget):
+        import matplotlib.finance as finance
         self.widget = widget
         finance.volume_overlay(widget, self.open, self.close, self.volume,
                                self.colorup, self.colordown, self.width)

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-
 # from flufl.enum import Enum
 from datetime import timedelta
+from pandas import DataFrame
+from quantdigger.datasource.dsutil import get_setting_datasource
 from quantdigger.errors import PeriodTypeError
 from quantdigger.config import settings
 from quantdigger.util import dlogger as logger
@@ -213,14 +214,14 @@ class Transaction(object):
             self.order = order
         self.volume_multiple = order.volume_multiple
         self.compute_commission()
-        #print "********************" 
-        #print self.datetime, self.price, self.quantity, self.volume_multiple, ratio
-        #print "********************" 
+        #six.print_("********************" )
+        #six.print_(self.datetime, self.price, self.quantity, self.volume_multiple, ratio)
+        #six.print_("********************" )
         #assert False
 
     def compute_commission(self):
         ratio = settings['stock_commission'] if self.contract.is_stock else\
-                     settings['future_commission']
+            settings['future_commission']
         self.commission = self.price * self.quantity * \
             self.volume_multiple * ratio
 
@@ -232,14 +233,17 @@ class Transaction(object):
             return self._hash
 
     def __eq__(self, r):
-        return self._hash == r._hash
+        try:
+            return self._hash == r._hash
+        except AttributeError:
+            return hash(self) == hash(r)
 
     def __str__(self):
         rst = " id: %s\n contract: %s\n direction: %s\n price: %f\n quantity: %d\n side: %s\n datetime: %s\n price_type: %s\n hedge_type: %s" % \
-        (self.id, self.contract, Direction.type_to_str(self.direction),
-        self.price, self.quantity, TradeSide.type_to_str(self.side),
-        self.datetime, PriceType.type_to_str(self.price_type),
-        HedgeType.type_to_str(self.hedge_type))
+            (self.id, self.contract, Direction.type_to_str(self.direction),
+             self.price, self.quantity, TradeSide.type_to_str(self.side),
+             self.datetime, PriceType.type_to_str(self.price_type),
+             HedgeType.type_to_str(self.hedge_type))
         return rst
 
 
@@ -288,10 +292,10 @@ class Order(object):
         :ivar id: 报单编号
         :ivar contract: 合约。
         :ivar direction: 多空方向。
-        :ivar price: 成交价格。
+        :ivar price: 下单价格。
         :ivar quantity: 成交数量。
         :ivar side: 开平仓标志。
-        :ivar datetime: 成交时间
+        :ivar datetime: 下单时间
         :ivar price_type: 下单类型。
         :ivar hedge_type: 交易类型。
     """
@@ -327,8 +331,7 @@ class Order(object):
             self.volume_multiple
 
     def print_order(self):
-        #print "Order: Symbol=%s, Type=%s, Quantity=%s, Direction=%s" % \
-            #(self.symbol, self.order_type, self.quantity, self.direction)
+        #six.print_("Order: Symbol=%s, Type=%s, Quantity=%s, Direction=%s" % (self.symbol, self.order_type, self.quantity, self.direction))
         pass
 
     def __hash__(self):
@@ -339,11 +342,11 @@ class Order(object):
             return self._hash
 
     def __str__(self):
-        rst = " id: %s\n contract: %s\n direction: %s\n price: %f\n quantity: %d\n side: %s\n datetime: %s\n price_type: %s\n hedge_type: %s\n long_margin_ratio: %f" % \
-        (self.id, self.contract, Direction.type_to_str(self.direction),
-        self.price, self.quantity, TradeSide.type_to_str(self.side),
-        self.datetime, PriceType.type_to_str(self.price_type),
-        HedgeType.type_to_str(self.hedge_type), self.long_margin_ratio)
+        rst = " id: %s\n contract: %s\n direction: %s\n price: %f\n quantity: %d\n side: %s\n datetime: %s\n price_type: %s\n hedge_type: %s\n" % \
+            (self.id, self.contract, Direction.type_to_str(self.direction),
+             self.price, self.quantity, TradeSide.type_to_str(self.side),
+             self.datetime, PriceType.type_to_str(self.price_type),
+             HedgeType.type_to_str(self.hedge_type))
         return rst
 
     def __eq__(self, r):
@@ -360,6 +363,7 @@ class Contract(object):
     :ivar volume_multiple: 合约乘数。
     """
     info = None
+    source_type = None
 
     def __init__(self, str_contract):
         ## @TODO 修改参数为（code, exchange)
@@ -383,7 +387,15 @@ class Contract(object):
         else:
             logger.error('Unknown exchange: {0}', self.exchange)
             assert(False)
-    
+
+    @classmethod
+    def _get_info(cls):
+        if Contract.source_type:
+            return Contract.info
+        src, Contract.source_type = get_setting_datasource()
+        Contract.info = src.get_contracts()
+        return Contract.info
+
     @classmethod
     def from_string(cls, strcontract):
         return cls(strcontract)
@@ -400,7 +412,10 @@ class Contract(object):
             return self._hash
 
     def __eq__(self, r):
-        return self._hash == r._hash
+        try:
+            return self._hash == r._hash
+        except AttributeError:
+            return hash(self) == hash(r)
 
     def __cmp__(self, r):
         return str(self) < str(r)
@@ -414,7 +429,7 @@ class Contract(object):
     def long_margin_ratio(cls, strcontract):
         try:
             ## @todo 确保CONTRACTS.csv里面没有重复的项，否则有可能返回数组．
-            return cls.info.ix[strcontract.upper(), 'long_margin_ratio']
+            return cls._get_info().loc[strcontract.upper(), 'long_margin_ratio']
         except KeyError:
             logger.warn("Can't not find contract: %s" % strcontract)
             return 1
@@ -423,7 +438,7 @@ class Contract(object):
     @classmethod
     def short_margin_ratio(cls, strcontract):
         try:
-            return cls.info.ix[strcontract.upper(), 'short_margin_ratio']
+            return cls._get_info().loc[strcontract.upper(), 'short_margin_ratio']
         except KeyError:
             logger.warn("Can't not find contract: %s" % strcontract)
             return 1
@@ -432,7 +447,7 @@ class Contract(object):
     @classmethod
     def volume_multiple(cls, strcontract):
         try:
-            return cls.info.ix[strcontract.upper(), 'volume_multiple']
+            return cls._get_info().loc[strcontract.upper(), 'volume_multiple']
         except KeyError:
             logger.warn("Can't not find contract: %s" % strcontract)
             return 1
@@ -446,16 +461,16 @@ class Period(object):
     :ivar count: 数值
     """
     #class Type(Enum):
-        #MilliSeconds = "MilliSeconds" 
-        #Seconds = "Seconds" 
-        #Minutes = "Minutes" 
-        #Hours = "Hours" 
-        #Days = "Days" 
-        #Months = "Months" 
-        #Seasons = "Seasons" 
-        #Years = "Years" 
+        #MilliSeconds = "MilliSeconds"
+        #Seconds = "Seconds"
+        #Minutes = "Minutes"
+        #Hours = "Hours"
+        #Days = "Days"
+        #Months = "Months"
+        #Seasons = "Seasons"
+        #Years = "Years"
     periods = {
-        "MILLISECOND": 0, 
+        "MILLISECOND": 0,
         "SECOND" : 1,
         "MINUTE": 2,
         "HOUR": 3,
@@ -490,7 +505,7 @@ class Period(object):
         }
         try:
             u = m[self.unit]
-            kwargs = {u: 1}
+            kwargs = {u: self.count}
             return timedelta(**kwargs)
         except KeyError:
             raise Exception('unit "%s" is not supported' % self.unit)
@@ -537,19 +552,22 @@ class PContract(object):
             return self._hash
 
     def __eq__(self, r):
-        return self._hash == r._hash
+        try:
+            return self._hash == r._hash
+        except AttributeError:
+            return hash(self) == hash(r)
 
     def __str__(self):
         return '%s-%s' % (str(self.contract), str(self.period))
 
     def __cmp__(self, r):
         if self.period < r.period:
-            return -1 
+            return -1
         elif self.period > r.period:
             return 1
         else:
             if self.contract < r.contract:
-                return -1 
+                return -1
             elif self.contract > r.contract:
                 return 1
             else:
@@ -575,7 +593,10 @@ class PositionKey(object):
             return self._hash
 
     def __eq__(self, r):
-        return self._hash == r._hash
+        try:
+            return self._hash == r._hash
+        except AttributeError:
+            return hash(self) == hash(r)
 
 
 class Position(object):
