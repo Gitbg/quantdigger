@@ -6,6 +6,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 
+#from quantdigger.technicals.talib_indicator import tMA, Volume
 from quantdigger.util import gen_logger as log
 from quantdigger.interaction.windowgate import WindowGate
 from quantdigger.widgets.mplotwidgets import widgets
@@ -75,8 +76,8 @@ class MainWindow(object):
         subwidget1.add_plotter(candles, False)
         self.candle_widget = self.frame.add_widget(0, subwidget1, True)
         ## 添加指标
-        #self.frame.add_technical(0, MA(price_data.close, 20, 'MA20', 'y', 2))
-        #self.frame.add_technical(0, MA(price_data.close, 30, 'MA30', 'b', 2))
+        #self.frame.add_technical(0, tMA(price_data.close, 20, 'MA20', 'y', 2))
+        #self.frame.add_technical(0, tMA(price_data.close, 30, 'MA30', 'b', 2))
         #self.frame.add_technical(1, Volume(price_data.open, price_data.close, price_data.vol))
         self.frame.draw_widgets()
 

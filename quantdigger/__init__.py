@@ -4,7 +4,8 @@ from quantdigger.engine.strategy import *
 from quantdigger.config import settings
 from quantdigger.configutil import ConfigUtil
 from quantdigger.engine.series import NumberSeries, DateTimeSeries
-from quantdigger.technicals.common import *
+from quantdigger.technicals.tquant_indicator import *
+from quantdigger.technicals.talib_indicator import *
 from quantdigger.util import rlogger, deprecated
 
 __version__ = '0.6.1'

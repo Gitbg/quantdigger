@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import Formatter
 from quantdigger.widgets.mplotwidgets import widgets, mplots
 from quantdigger.widgets.mplotwidgets.mplots import Candles
-from quantdigger.technicals.common import Line, LineWithX, Volume
+from quantdigger.technicals import Line, LineWithX, Volume
 
 
 def xticks_to_display(data_length):

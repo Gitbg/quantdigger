@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
-
+##
+# @file tquant_indicator.py
+# @brief
+# @author wondereamer
+# @version 0.1
+# @date 2015-12-23
 import talib
+import mpl_finance as finance
 
-from quantdigger.technicals.base import (
-    TechnicalBase,
-    ndarray,
-    tech_init
-)
+from quantdigger.technicals.base import \
+    TechnicalBase, ndarray, tech_init
 from quantdigger.technicals.techutil import register_tech
 from quantdigger.widgets.plotter import Plotter, plot_init
 
-
-@register_tech('MA')
-class MA(TechnicalBase):
+@register_tech('aMA')
+class aMA(TechnicalBase):
     """ 移动平均线指标。 """
     @tech_init
-    def __init__(self, data, n, name='MA',
+    def __init__(self, data, n, name='aMA',
                  style='y', lw=1):
         """ data (NumberSeries/np.ndarray/list) """
-        super(MA, self).__init__(name)
+        super(aMA, self).__init__(name)
         # 必须的函数参数
         self._args = [ndarray(data), n]
 
@@ -36,21 +38,73 @@ class MA(TechnicalBase):
         """
         ## @NOTE self.values为保留字段！
         # 绘图和指标基类都会用到self.values
-        self.values = talib.SMA(data, n)
+        self.values = talib.MA(data, n)
 
     def plot(self, widget):
         """ 绘图，参数可由UI调整。 """
         self.widget = widget
         self.plot_line(self.values, self.style, lw=self.lw)
 
+@register_tech('aCCI')
+class aCCI(TechnicalBase):
+    @tech_init
+    def __init__(self, high, low, close, n, name='aCCI', style='y', lw=1):
+        super(aCCI, self).__init__(name)
+        self._args = [ndarray(high), ndarray(low), ndarray(close), n]
 
-@register_tech('BOLL')
-class BOLL(TechnicalBase):
+    def _rolling_algo(self, high, low, close, n, i):
+        return talib.CCI(high, low, close, n)[i]
+
+    def _vector_algo(self, high, low, close, n):
+        self.values = talib.CCI(high, low, close, n)
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values, self.style, lw=self.lw)
+
+@register_tech('aRSI')
+class aRSI(TechnicalBase):
+    @tech_init
+    def __init__(self, close, n, name = 'aRSI', style = 'y', lw = 1):
+        super(aRSI, self).__init__(name)
+        self._args = [ndarray(close), n]
+
+    def _rolling_algo(self, close, n, i):
+        return talib.RSI(close, n)[i]
+
+    def _vector_algo(self, close, n):
+        self.values = talib.RSI(close, timeperiod = n)
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values, self.style, lw = self.lw)
+
+@register_tech('aBIAS')
+class aBIAS(TechnicalBase):
+    @tech_init
+    def __init__(self, close, n, name='aBIAS', style='y', lw=1):
+        super(aBIAS, self).__init__(name)
+        self._args = [ndarray(close), n]
+
+    def _rolling_algo(self, close, n, i):
+        ma = talib.MA(close, n)
+        return (close[i] - ma[i]) / ma[i] * 100
+
+    def _vector_algo(self, close, n):
+        ma = talib.MA(close, n)
+        self.values = (close - ma) / ma * 100
+
+    def plot(self, widget):
+        self.widget = widget
+        self.plot_line(self.values, self.style, lw = self.lw)
+
+@register_tech('aBOLL')
+class aBOLL(TechnicalBase):
     """ 布林带指标。 """
     @tech_init
-    def __init__(self, data, n, name='BOLL',
+    def __init__(self, data, n, name='aBOLL',
                  styles=('y', 'b', 'g'), lw=1):
-        super(BOLL, self).__init__(name)
+        super(aBOLL, self).__init__(name)
         ### @TODO 只有在逐步运算中需给self.values先赋值,
         ## 去掉逐步运算后删除
         #self.values = OrderedDict([
@@ -80,7 +134,6 @@ class BOLL(TechnicalBase):
         self.plot_line(self.values['upper'], self.styles[0], lw=self.lw)
         self.plot_line(self.values['middler'], self.styles[1], lw=self.lw)
         self.plot_line(self.values['lower'], self.styles[2], lw=self.lw)
-
 
 #class RSI(TechnicalBase):
     #@create_attributes
@@ -147,7 +200,7 @@ class BOLL(TechnicalBase):
         #emaslow = MA(x, nslow, type='exponential').value
         #emafast = MA(x, nfast, type='exponential').value
         #return emaslow, emafast, emafast - emaslow
-
+        
     #def plot(self, widget):
         #self.widget = widget
         #fillcolor = 'darkslategrey'
@@ -171,7 +224,6 @@ class Volume(Plotter):
         self.values = ndarray(volume)
 
     def plot(self, widget):
-        import matplotlib.finance as finance
         self.widget = widget
         finance.volume_overlay(widget, self.open, self.close, self.volume,
                                self.colorup, self.colordown, self.width)
@@ -202,4 +254,4 @@ class LineWithX(Plotter):
         self.plot_line(self.xdata, self.values, self.style, lw=self.lw, ms=self.ms)
 
 
-__all__ = ['MA', 'BOLL', 'Volume', 'Line', 'LineWithX']
+__all__ = ['aMA', 'aBOLL', 'aCCI', 'aBIAS','aRSI', 'Volume', 'Line', 'LineWithX']

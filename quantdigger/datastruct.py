@@ -376,7 +376,7 @@ class Contract(object):
             logger.exception()
         self.exchange = exchange
         self.code = code
-        if self.exchange == 'SZ' or self.exchange == 'SH':
+        if self.exchange == 'SZ' or self.exchange == 'SH' or self.exchange == 'CYB':
             self.is_stock = True
         elif self.exchange == 'SHFE':
             self.is_stock = False
@@ -477,7 +477,8 @@ class Period(object):
         "DAY": 4,
         "MONTH": 5,
         "SEASON": 6,
-        "YEAR": 7
+        "YEAR": 7,
+        "WEEK": 8
     }
 
     def __init__(self, strperiod):
@@ -498,6 +499,7 @@ class Period(object):
     def to_timedelta(self):
         m = {
             'DAY': 'days',
+            'WEEK': 'weeks',
             'HOUR': 'hours',
             'MINUTE': 'minutes',
             'SECOND': 'seconds',

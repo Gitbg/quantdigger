@@ -20,7 +20,10 @@ class CsvSource(DatasourceAbstract):
         dt_start = pd.to_datetime(dt_start)
         dt_end = pd.to_datetime(dt_end)
         data = data[(dt_start <= data.index) & (data.index <= dt_end)]
-        assert data.index.is_unique
+        #assert data.index.is_unique
+        if data.index.is_unique == False:
+            print("%s data is not unique" % pcontract)
+            data = data.drop_duplicates()
         return SourceWrapper(pcontract, data, len(data))
 
     def get_last_bars(self, pcontract, n):
@@ -36,7 +39,7 @@ class CsvSource(DatasourceAbstract):
             pd.DataFrame
         """
         fname = os.path.join(self._root, "CONTRACTS.csv")
-        df = pd.read_csv(fname)
+        df = pd.read_csv(fname, converters={'code': str})
         df.index = df['code'] + '.' + df['exchange']
         df.index = map(lambda x: x.upper(), df.index)
         return df
